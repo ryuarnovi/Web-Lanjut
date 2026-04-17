@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    ports:
+    - "9092:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      - CI_ENVIRONMENT=development

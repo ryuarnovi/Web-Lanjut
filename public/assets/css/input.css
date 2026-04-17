@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --color-klinik-primary: #4154f1;
+  --color-klinik-secondary: #717ff5;
+  --color-klinik-dark: #012970;
+  --font-nunito: "Nunito", sans-serif;
+}
+
+/* Custom Clinical Styles */
+@layer components {
+    .btn-klinik {
+        background-color: var(--color-klinik-primary);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s;
+    }
+    .btn-klinik:hover {
+        background-color: var(--color-klinik-dark);
+        transform: translateY(-2px);
+    }
+}
