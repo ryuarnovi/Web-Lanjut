@@ -32,11 +32,25 @@ if(uri_string()!=""){
   <link href="<?= base_url()?>NiceAdmin/assets/vendor/remixicon/remixicon.css" rel="stylesheet">
   <link href="<?= base_url()?>NiceAdmin/assets/vendor/simple-datatables/style.css" rel="stylesheet">
 
+  <!-- Tailwind CSS (Compiled) -->
+  <link href="<?= base_url()?>assets/css/app.css" rel="stylesheet">
+
   <!-- Template Main CSS File -->
   <link href="<?= base_url()?>NiceAdmin/assets/css/style.css" rel="stylesheet">
 
-  <!-- Tailwind CSS (Compiled) -->
-  <link href="<?= base_url()?>assets/css/app.css" rel="stylesheet">
+  <style>
+    /* Fix for Sidebar Visibility Conflict */
+    .sidebar-nav .nav-content.show {
+      visibility: visible !important;
+      display: block !important;
+    }
+    .sidebar-nav .nav-content.show a {
+      visibility: visible !important;
+    }
+    .sidebar-nav .nav-link:not(.collapsed) {
+        background-color: #f6f9ff !important;
+    }
+  </style>
 
   <!-- =======================================================
   * Template Name: NiceAdmin

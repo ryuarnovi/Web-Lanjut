@@ -28,7 +28,15 @@ class Auth extends BaseController
                 'logged_in' => true,
             ];
             session()->set($sessionData);
-            return redirect()->to(base_url('dashboard'));
+
+            // Role-based redirection
+            switch($sessionData['role']) {
+                case 'resepsionis': return redirect()->to(base_url('resepsionis/pendaftaran'));
+                case 'dokter':       return redirect()->to(base_url('dokter/antrean'));
+                case 'apoteker':     return redirect()->to(base_url('apoteker/stok'));
+                case 'kasir':        return redirect()->to(base_url('kasir/billing'));
+                default:             return redirect()->to(base_url('dashboard'));
+            }
         } else {
             return redirect()->back()->with('error', 'Username atau Password salah!');
         }

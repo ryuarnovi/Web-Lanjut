@@ -6,10 +6,27 @@
   <nav>
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="<?= base_url() ?>">Home</a></li>
-      <li class="breadcrumb-item active">Dashboard</li>
+      <li class="breadcrumb-item active">Dashboard Overview</li>
     </ol>
   </nav>
 </div><!-- End Page Title -->
+
+<!-- Welcome Banner -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm bg-primary text-white overflow-hidden p-0" style="background: linear-gradient(135deg, #4154f1 0%, #2e3eaa 100%) !important;">
+            <div class="card-body p-4 d-flex align-items-center position-relative">
+                <div class="me-auto">
+                    <h2 class="fw-bold mb-1">Selamat Datang Kembali, <?= explode(' ', session()->get('name') ?? 'User')[0] ?>! 👋</h2>
+                    <p class="mb-0 opacity-75">Sistem KlinikOS 2.0 siap membantu Anda mengelola layanan hari ini sebagai <span class="badge bg-white text-primary fw-bold"><?= ucfirst(session()->get('role')) ?></span>.</p>
+                </div>
+                <div class="d-none d-md-block opacity-25">
+                    <i class="bi bi-hospital" style="font-size: 5rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <section class="section dashboard">
   <div class="row">
