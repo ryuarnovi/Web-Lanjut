@@ -43,7 +43,7 @@ Gunakan Docker Compose untuk membuild image dan menjalankan container:
 ```bash
 docker compose up --build -d
 ```
-*Gunakan flag `-d` untuk menjalankan di background.*
+*Gunakan flag `-d` untuk menjalankan di background. Proses build akan otomatis mendeteksi arsitektur sistem Anda (Intel/ARM) untuk instalasi Tailwind CLI.*
 
 ### 3. Akses Aplikasi
 Buka browser dan akses URL berikut:
@@ -56,9 +56,12 @@ Buka browser dan akses URL berikut:
 
 ## 🎨 Pengembangan UI (TailwindCSS v4)
 
-Proyek ini menggunakan **TailwindCSS v4 Standalone CLI** (tanpa Node.js di host). Binary `tailwindcss` sudah tersedia di root proyek.
+Proyek ini menggunakan **TailwindCSS v4 Standalone CLI** (tanpa Node.js di host). 
 
-- **Watch Mode (Mac/Linux)**:
+> [!IMPORTANT]
+> Binary `tailwindcss` yang disertakan adalah untuk **Mac ARM64 (Apple Silicon)**. Jika Anda menggunakan Windows, Linux, atau Mac Intel, silakan lihat bagian [Troubleshooting](#3-tailwind-binary-error--architecture-mismatch) untuk menggantinya.
+
+- **Watch Mode**:
   ```bash
   ./tailwindcss -i public/assets/css/input.css -o public/assets/css/app.css --watch
   ```
@@ -88,11 +91,26 @@ ports:
   - "9093:80" # Ubah 9092 menjadi 9093
 ```
 
-### 3. Tailwind Binary Error
-Jika binary `./tailwindcss` tidak bisa dieksekusi, berikan akses execute:
-```bash
-chmod +x tailwindcss
-```
+### 3. Tailwind Binary Error / Architecture Mismatch
+Jika Anda menggunakan OS selain Mac Apple Silicon (M1/M2/M3), binary `./tailwindcss` bawaan tidak akan berjalan.
+
+- **Gejala**: `Exec format error`, `Exec error`, atau perintah tidak dikenal.
+- **Solusi**:
+  1. Download binary yang sesuai dengan OS & Arsitektur Anda di [Tailwind CSS Releases](https://github.com/tailwindlabs/tailwindcss/releases/latest).
+     - **Windows**: Cari file `tailwindcss-windows-x64.exe`.
+     - **Linux**: Cari file `tailwindcss-linux-x64` atau `tailwindcss-linux-arm64`.
+     - **Mac Intel**: Cari file `tailwindcss-macos-x64`.
+  2. Ganti nama file yang didownload menjadi `tailwindcss` (atau `tailwindcss.exe` di Windows) dan timpa file lama di root proyek.
+  3. Berikan akses execute (untuk Linux/Mac):
+     ```bash
+     chmod +x tailwindcss
+     ```
+
+- **Alternatif (Jika memiliki Node.js)**:
+  Jika Anda tidak ingin repot dengan binary, gunakan `npx`:
+  ```bash
+  npx @tailwindcss/cli -i public/assets/css/input.css -o public/assets/css/app.css --watch
+  ```
 
 ---
 

@@ -127,7 +127,6 @@ _modules/*
 /phpunit*.xml
 
 # Tailwind / Node
-tailwindcss
 node_modules/
 package-lock.json
 public/assets/css/app.css.map

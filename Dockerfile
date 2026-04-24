@@ -17,10 +17,18 @@ RUN set -ex; \
         unzip; \
     docker-php-ext-install intl gd zip mysqli pdo_mysql; \
     a2enmod rewrite; \
-    # Install Tailwind CLI (Linux arm64)
-    curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-arm64; \
-    chmod +x tailwindcss-linux-arm64; \
-    mv tailwindcss-linux-arm64 /usr/local/bin/tailwindcss; \
+    # Install Tailwind CLI (Auto-detect architecture)
+    ARCH=$(uname -m); \
+    if [ "$ARCH" = "x86_64" ]; then \
+        TW_BINARY="tailwindcss-linux-x64"; \
+    elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then \
+        TW_BINARY="tailwindcss-linux-arm64"; \
+    else \
+        echo "Unsupported architecture: $ARCH"; exit 1; \
+    fi; \
+    curl -sLO "https://github.com/tailwindlabs/tailwindcss/releases/latest/download/$TW_BINARY"; \
+    chmod +x "$TW_BINARY"; \
+    mv "$TW_BINARY" /usr/local/bin/tailwindcss; \
     # Install Composer
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer; \
     apt-get clean; \
