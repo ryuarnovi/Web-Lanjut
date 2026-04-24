@@ -21,11 +21,16 @@ RUN set -ex; \
     curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-arm64; \
     chmod +x tailwindcss-linux-arm64; \
     mv tailwindcss-linux-arm64 /usr/local/bin/tailwindcss; \
+    # Install Composer
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
 
 # Copy project files
 COPY . .
+
+# Install PHP dependencies
+RUN composer install --no-interaction --optimize-autoloader --no-dev || true
 
 # Build Tailwind CSS
 RUN tailwindcss -i public/assets/css/input.css -o public/assets/css/app.css
