@@ -1,9 +1,5 @@
   <!-- ======= Footer ======= -->
-  <footer id="footer" class="footer">
-    <div class="copyright">
-      &copy; Copyright <strong><span>Toko Saya</span></strong>. All Rights Reserved
-    </div>
-    <div class="credits">
-      Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-    </div>
+  <footer class="admin-footer">
+    <div>&copy; Copyright <strong>KlinikOS 2.0</strong>. All Rights Reserved</div>
+    <div class="mt-1">Designed by <a href="#" class="text-klinik-primary hover:underline">KlinikOS Team</a></div>
   </footer><!-- End Footer -->

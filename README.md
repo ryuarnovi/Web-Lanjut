@@ -35,7 +35,8 @@ cp env.example .env
 ```
 
 ### 2. Docker Orchestration
-Use Docker Compose to build the required images and start the containers. The build process automatically installs necessary PHP extensions, Composer dependencies, and the Tailwind CSS standalone CLI.
+Use Docker Compose to build the required images and start the containers.
+*Note: The build process now automatically installs Node.js 20 and dependencies (NPM & Composer) inside the container.*
 ```bash
 docker compose up --build -d
 ```
@@ -51,16 +52,12 @@ Once the containers are running, access the application via your web browser:
 ## Development Guidelines
 
 ### Tailwind CSS v4 Build System
-The project utilizes the Tailwind CSS v4 Standalone CLI to compile stylesheets without requiring a Node.js runtime environment on the host machine. 
+The project uses Tailwind CSS v4 with an NPM-based workflow integrated into Docker. You do not need Node.js or the Tailwind binary on your host machine.
 
-- **Watch Mode (Development)**:
-  ```bash
-  ./tailwindcss -i public/assets/css/input.css -o public/assets/css/app.css --watch
-  ```
-- **Build Mode (Production)**:
-  ```bash
-  ./tailwindcss -i public/assets/css/input.css -o public/assets/css/app.css
-  ```
+- **Development (Automatic)**:
+  The `tailwind` service in `docker-compose.yml` automatically watches for changes and recompiles CSS using `npm run dev`.
+- **Production Build (Manual/CI)**:
+  The Dockerfile automatically runs `npm run build` during the image creation process.
 
 ### General Notes
 - **Creating New Modules**: To add a new module, create a new directory under `app/Modules/` containing the respective `Controllers`, `Views`, and `Models`. The namespace is automatically detected via `app/Config/Autoload.php`.
@@ -85,20 +82,12 @@ ports:
   - "9093:80"
 ```
 
-### 3. Tailwind Binary Architecture Mismatch
-The included `./tailwindcss` binary is compiled for Mac ARM64 (Apple Silicon). If you are developing on Windows, Linux, or a Mac Intel architecture, the binary will fail to execute (`Exec format error`).
-
-**Resolution**:
-1. Download the correct binary for your operating system and architecture from the [Tailwind CSS Releases page](https://github.com/tailwindlabs/tailwindcss/releases/latest).
-2. Rename the downloaded executable to `tailwindcss` (`tailwindcss.exe` for Windows) and replace the existing file in the project root.
-3. Ensure the binary has execution permissions (Linux/Mac):
-   ```bash
-   chmod +x tailwindcss
-   ```
-Alternatively, if Node.js is installed on your host system, you may use `npx`:
+### 3. Tailwind Recompilation Issues
+If the CSS does not update, ensure the `tailwind` service is running in Docker:
 ```bash
-npx @tailwindcss/cli -i public/assets/css/input.css -o public/assets/css/app.css --watch
+docker compose ps
 ```
+If it's down, restart it: `docker compose up -d tailwind`.
 
 ## Project Documentation
 

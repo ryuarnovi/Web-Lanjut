@@ -26,9 +26,9 @@
   </div>
 </div>
 
-<section class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+<section class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
   <!-- Left side columns -->
-  <div class="xl:col-span-2 space-y-6">
+  <div class="lg:col-span-2 space-y-6">
     <!-- Stat Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <!-- Kunjungan Card -->
@@ -87,7 +87,7 @@
         <div id="reportsChart"></div>
         <script>
           document.addEventListener("DOMContentLoaded", () => {
-            new ApexCharts(document.querySelector("#reportsChart"), {
+            const reportsChart = new ApexCharts(document.querySelector("#reportsChart"), {
               series: [{
                 name: 'Kunjungan',
                 data: [31, 40, 28, 51, 42, 82, 56],
@@ -95,7 +95,7 @@
                 name: 'Pendapatan (Juta)',
                 data: [11, 32, 45, 32, 34, 52, 41]
               }],
-              chart: { height: 350, type: 'area', toolbar: { show: false } },
+              chart: { height: 350, type: 'area', toolbar: { show: false }, redrawOnWindowResize: true },
               markers: { size: 4 },
               colors: ['#4154f1', '#2eca6a'],
               fill: { type: "gradient", gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.4, stops: [0, 90, 100] } },
@@ -103,7 +103,8 @@
               stroke: { curve: 'smooth', width: 2 },
               xaxis: { type: 'datetime', categories: ["2024-04-10", "2024-04-11", "2024-04-12", "2024-04-13", "2024-04-14", "2024-04-15", "2024-04-16"] },
               tooltip: { x: { format: 'dd/MM/yy' } }
-            }).render();
+            });
+            reportsChart.render();
           });
         </script>
       </div>
@@ -181,7 +182,8 @@
         <div id="trafficChart" style="min-height: 400px;"></div>
         <script>
           document.addEventListener("DOMContentLoaded", () => {
-            echarts.init(document.querySelector("#trafficChart")).setOption({
+            const trafficChart = echarts.init(document.querySelector("#trafficChart"));
+            trafficChart.setOption({
               tooltip: { trigger: 'item' },
               legend: { top: '5%', left: 'center' },
               series: [{
@@ -200,6 +202,11 @@
                   { value: 300, name: 'Radiologi' }
                 ]
               }]
+            });
+            
+            // Handle ECharts responsiveness
+            window.addEventListener('resize', () => {
+              trafficChart.resize();
             });
           });
         </script>

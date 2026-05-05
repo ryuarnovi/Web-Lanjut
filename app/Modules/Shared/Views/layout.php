@@ -62,6 +62,11 @@ if(uri_string()!=""){
         } else {
           document.body.classList.toggle('sidebar-closed');
         }
+        
+        // Trigger resize for charts
+        setTimeout(() => {
+          window.dispatchEvent(new Event('resize'));
+        }, 300);
       });
     }
 

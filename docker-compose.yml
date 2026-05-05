@@ -6,6 +6,7 @@ services:
     volumes:
       - .:/var/www/html
       - /var/www/html/vendor
+      - /var/www/html/node_modules
     environment:
       - CI_ENVIRONMENT=development
     depends_on:
@@ -15,5 +16,6 @@ services:
     build: .
     volumes:
       - .:/var/www/html
+      - /var/www/html/node_modules
     working_dir: /var/www/html
-    command: tailwindcss -i public/assets/css/input.css -o public/assets/css/app.css --watch=always
+    command: npm run dev
