@@ -1,23 +1,288 @@
 @import "tailwindcss";
 
+@source "../../../app/**/*.php";
+@source "../../../app/Modules/**/*.php";
+
 @theme {
   --color-klinik-primary: #4154f1;
   --color-klinik-secondary: #717ff5;
   --color-klinik-dark: #012970;
+  --color-klinik-light: #f6f9ff;
+  --color-klinik-accent: #2eca6a;
   --font-nunito: "Nunito", sans-serif;
 }
 
-/* Custom Clinical Styles */
+/* ============================================================
+   Admin Layout Styles (replaces NiceAdmin/Bootstrap CSS)
+   ============================================================ */
+@layer base {
+  body {
+    font-family: "Nunito", sans-serif;
+    background: #f6f9ff;
+    color: #444444;
+  }
+  a { color: #4154f1; text-decoration: none; }
+  a:hover { color: #717ff5; }
+  h1,h2,h3,h4,h5,h6 { font-family: "Nunito", sans-serif; }
+}
+
 @layer components {
-    .btn-klinik {
-        background-color: var(--color-klinik-primary);
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
-        transition: all 0.3s;
+  /* ---------- Header ---------- */
+  .admin-header {
+    position: fixed; top: 0; left: 0; right: 0; height: 60px; z-index: 50;
+    background: #fff; box-shadow: 0 2px 20px rgba(1,41,112,.08);
+    display: flex; align-items: center; padding: 0 24px;
+    transition: all 0.3s;
+  }
+  .admin-header .logo { display: flex; align-items: center; gap: 8px; }
+  .admin-header .logo img { max-height: 28px; }
+  .admin-header .logo span { font-size: 1.35rem; font-weight: 700; color: #012970; }
+
+  .admin-header .search-bar { min-width: 320px; margin-left: 40px; }
+  .admin-header .search-bar input {
+    width: 100%; padding: 8px 14px 8px 40px; border: 1px solid #e6e9ed;
+    border-radius: 8px; font-size: 0.9rem; transition: 0.3s;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23999' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0'/%3E%3C/svg%3E") no-repeat 12px center;
+  }
+  .admin-header .search-bar input:focus {
+    outline: none; border-color: #4154f1; box-shadow: 0 0 0 3px rgba(65,84,241,.1);
+  }
+
+  .admin-header .header-nav { margin-left: auto; }
+  .admin-header .nav-profile img { width: 36px; height: 36px; object-fit: cover; }
+
+  /* ---------- Sidebar ---------- */
+  .admin-sidebar {
+    position: fixed; top: 60px; left: 0; bottom: 0; width: 280px;
+    z-index: 40; background: #fff; padding: 20px 0;
+    overflow-y: auto; border-right: 1px solid #eceef1;
+    transition: all 0.3s;
+  }
+  .admin-sidebar .nav-heading {
+    font-size: 0.68rem; text-transform: uppercase; color: #899bbd;
+    letter-spacing: 1px; padding: 10px 20px; font-weight: 700; margin-top: 8px;
+  }
+  .admin-sidebar .nav-item { margin: 0; }
+  .admin-sidebar .nav-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; color: #012970; font-size: 0.88rem;
+    transition: 0.3s; cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+  }
+  .admin-sidebar .nav-link:hover,
+  .admin-sidebar .nav-link.active { background: #f6f9ff; color: #4154f1; }
+  .admin-sidebar .nav-link .icon { font-size: 1.1rem; width: 20px; text-align: center; }
+  .admin-sidebar .nav-link .chevron { margin-left: auto; transition: transform 0.3s; font-size: 0.7rem; }
+  .admin-sidebar .nav-link.expanded .chevron { transform: rotate(180deg); }
+
+  .admin-sidebar .nav-sub {
+    max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+    padding-left: 50px;
+  }
+  .admin-sidebar .nav-sub.open { max-height: 500px; }
+  .admin-sidebar .nav-sub a {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 0; font-size: 0.82rem; color: #012970;
+  }
+  .admin-sidebar .nav-sub a:hover,
+  .admin-sidebar .nav-sub a.active { color: #4154f1; }
+  .admin-sidebar .nav-sub a::before {
+    content: ""; display: inline-block; width: 6px; height: 6px;
+    border-radius: 50%; border: 2px solid #899bbd; flex-shrink: 0;
+  }
+  .admin-sidebar .nav-sub a.active::before,
+  .admin-sidebar .nav-sub a:hover::before { border-color: #4154f1; }
+  .admin-sidebar .nav-link.text-danger { color: #dc3545 !important; }
+  .admin-sidebar .nav-link.text-danger:hover { background: #fff5f5; }
+
+  /* ---------- Main Content ---------- */
+  .admin-main {
+    margin-top: 60px; margin-left: 280px;
+    padding: 24px 30px; transition: all 0.3s; min-height: calc(100vh - 60px);
+  }
+
+  /* ---------- Footer ---------- */
+  .admin-footer {
+    margin-left: 280px; padding: 20px 30px;
+    font-size: 0.85rem; color: #899bbd; text-align: center;
+    border-top: 1px solid #eceef1; transition: all 0.3s;
+  }
+
+  /* ---------- Sidebar Toggle & Responsiveness ---------- */
+  body.sidebar-closed .admin-sidebar { width: 0; overflow: hidden; }
+  body.sidebar-closed .admin-main { margin-left: 0; }
+  body.sidebar-closed .admin-footer { margin-left: 0; }
+
+  @media (max-width: 1024px) {
+    .admin-sidebar { left: -280px; }
+    .admin-main { margin-left: 0; padding: 16px; }
+    .admin-footer { margin-left: 0; }
+    
+    body.sidebar-open .admin-sidebar { left: 0; }
+    body.sidebar-open::before {
+      content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 35;
     }
-    .btn-klinik:hover {
-        background-color: var(--color-klinik-dark);
-        transform: translateY(-2px);
-    }
+  }
+
+  /* ---------- Dropdown ---------- */
+  .dropdown-panel {
+    display: none; position: absolute; right: 0; top: 100%;
+    background: #fff; min-width: 280px; border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.12); z-index: 100;
+    border: 1px solid #eceef1; padding: 10px 0;
+  }
+  .dropdown-panel.show { display: block; }
+  .dropdown-panel .dropdown-header {
+    padding: 10px 16px; font-size: 0.88rem; font-weight: 700;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .dropdown-panel .dropdown-divider { height: 1px; margin: 4px 0; background: #eceef1; }
+  .dropdown-panel .dropdown-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px; font-size: 0.85rem; color: #444;
+    transition: 0.2s; cursor: pointer;
+  }
+  .dropdown-panel .dropdown-item:hover { background: #f6f9ff; }
+
+  /* ---------- Breadcrumb ---------- */
+  .breadcrumb { display: flex; gap: 8px; list-style: none; padding: 0; margin: 8px 0 0 0; font-size: 0.85rem; }
+  .breadcrumb li + li::before { content: "/"; color: #899bbd; margin-right: 8px; }
+  .breadcrumb li a { color: #4154f1; }
+  .breadcrumb li.active { color: #899bbd; }
+
+  /* ---------- Cards ---------- */
+  .card {
+    background: #fff; border-radius: 12px; border: none;
+    box-shadow: 0 2px 12px rgba(1,41,112,.04); margin-bottom: 24px;
+  }
+  .card-title {
+    padding: 20px 0 10px; font-size: 1rem; font-weight: 700;
+    color: #012970; font-family: "Nunito", sans-serif;
+  }
+  .card-title span { font-size: 0.85rem; font-weight: 400; color: #899bbd; }
+  .card-body { padding: 20px; }
+
+  /* ---------- Info Cards (Dashboard) ---------- */
+  .info-card .card-icon {
+    width: 54px; height: 54px; font-size: 1.5rem;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+  }
+  .info-card h6 { font-size: 1.8rem; font-weight: 700; color: #012970; margin: 0; }
+  .sales-card .card-icon { background: #e0e4ff; color: #4154f1; }
+  .revenue-card .card-icon { background: #dcf5e7; color: #2eca6a; }
+  .customers-card .card-icon { background: #fff3d6; color: #ff771d; }
+
+  /* ---------- Activity ---------- */
+  .activity .activity-item {
+    display: flex; gap: 12px; padding: 8px 0;
+    border-left: 2px solid #eceef1; margin-left: 8px; padding-left: 24px;
+    position: relative;
+  }
+  .activity .activity-badge {
+    position: absolute; left: -5px; font-size: 0.5rem;
+  }
+  .activity .activite-label {
+    font-size: 0.75rem; color: #899bbd; min-width: 56px; flex-shrink: 0;
+  }
+  .activity .activity-content { font-size: 0.88rem; color: #444; }
+
+  /* ---------- Tables ---------- */
+  .tw-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .tw-table thead { background: #f8f9fa; }
+  .tw-table th { padding: 12px 16px; font-weight: 600; color: #012970; text-align: left; }
+  .tw-table td { padding: 12px 16px; border-bottom: 1px solid #f1f3f5; color: #444; }
+  .tw-table tbody tr:hover { background: #f6f9ff; }
+
+  /* ---------- Badges ---------- */
+  .badge {
+    display: inline-flex; align-items: center; padding: 4px 10px;
+    border-radius: 6px; font-size: 0.75rem; font-weight: 600;
+  }
+  .badge-primary { background: #e0e4ff; color: #4154f1; }
+  .badge-success { background: #dcf5e7; color: #198754; }
+  .badge-warning { background: #fff3d6; color: #856404; }
+  .badge-danger { background: #fde8e8; color: #dc3545; }
+  .badge-info { background: #d6f0fb; color: #0dcaf0; }
+  .badge-secondary { background: #e9ecef; color: #6c757d; }
+  .badge-white { background: rgba(255,255,255,.25); color: #fff; }
+
+  /* ---------- Form Controls ---------- */
+  .form-input, .form-select, .form-textarea {
+    width: 100%; padding: 10px 14px; border: 1px solid #e0e6ed;
+    border-radius: 8px; font-size: 0.9rem; transition: 0.3s;
+    background: #fff;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none; border-color: #4154f1;
+    box-shadow: 0 0 0 3px rgba(65,84,241,.1);
+  }
+  .form-label { font-size: 0.88rem; font-weight: 600; color: #555; margin-bottom: 6px; display: block; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 8px; font-size: 0.88rem;
+    font-weight: 600; cursor: pointer; transition: all 0.3s;
+    border: none;
+  }
+  .btn-primary { background: #4154f1; color: #fff; }
+  .btn-primary:hover { background: #3240c6; transform: translateY(-1px); }
+  .btn-success { background: #198754; color: #fff; }
+  .btn-success:hover { background: #146c43; }
+  .btn-danger { background: #dc3545; color: #fff; }
+  .btn-danger:hover { background: #b02a37; }
+  .btn-secondary { background: #6c757d; color: #fff; }
+  .btn-outline-primary { background: transparent; color: #4154f1; border: 1px solid #4154f1; }
+  .btn-outline-primary:hover { background: #4154f1; color: #fff; }
+  .btn-outline-secondary { background: transparent; color: #6c757d; border: 1px solid #6c757d; }
+  .btn-outline-secondary:hover { background: #6c757d; color: #fff; }
+  .btn-outline-success { background: transparent; color: #198754; border: 1px solid #198754; }
+  .btn-outline-success:hover { background: #198754; color: #fff; }
+  .btn-outline-dark { background: transparent; color: #333; border: 1px solid #333; }
+  .btn-outline-dark:hover { background: #333; color: #fff; }
+  .btn-outline-info { background: transparent; color: #0dcaf0; border: 1px solid #0dcaf0; }
+  .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+
+  /* ---------- Alerts ---------- */
+  .alert {
+    padding: 12px 16px; border-radius: 8px; font-size: 0.88rem;
+    margin-bottom: 16px;
+  }
+  .alert-warning { background: #fff3d6; color: #856404; border: 1px solid #ffe08a; }
+  .alert-danger { background: #fde8e8; color: #dc3545; border: 1px solid #f5c2c7; }
+  .alert-info { background: #d6f0fb; color: #0c5460; border: 1px solid #b6dbf2; }
+  .alert-secondary { background: #e9ecef; color: #444; border: 1px solid #d3d6db; }
+
+  /* ---------- Tabs ---------- */
+  .tw-tabs { display: flex; gap: 0; border-bottom: 2px solid #eceef1; margin-bottom: 16px; }
+  .tw-tab {
+    padding: 10px 20px; font-size: 0.88rem; font-weight: 600;
+    color: #899bbd; cursor: pointer; border: none; background: none;
+    border-bottom: 2px solid transparent; margin-bottom: -2px; transition: 0.3s;
+  }
+  .tw-tab:hover { color: #4154f1; }
+  .tw-tab.active { color: #4154f1; border-bottom-color: #4154f1; }
+  .tw-tab-content { display: none; }
+  .tw-tab-content.active { display: block; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1024px) {
+    .admin-sidebar { width: 0; overflow: hidden; }
+    .admin-main { margin-left: 0; }
+    .admin-footer { margin-left: 0; }
+    body.sidebar-open .admin-sidebar { width: 280px; }
+    body.sidebar-open .admin-main { margin-left: 280px; }
+    .admin-header .search-bar { display: none; }
+  }
+
+  /* ---------- Custom Klinik Utilities ---------- */
+  .btn-klinik {
+    background-color: var(--color-klinik-primary);
+    color: white; padding: 0.5rem 1rem;
+    border-radius: 0.5rem; transition: all 0.3s; cursor: pointer;
+  }
+  .btn-klinik:hover {
+    background-color: var(--color-klinik-dark);
+    transform: translateY(-2px);
+  }
 }

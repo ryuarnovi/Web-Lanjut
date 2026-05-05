@@ -12,62 +12,28 @@ if(uri_string()!=""){
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
   <title>KlinikOS 2.0 - <?= $hlm ?></title>
-  <meta content="" name="description">
-  <meta content="" name="keywords">
+  <meta content="Sistem Informasi Klinik" name="description">
 
   <!-- Favicons -->
   <link href="<?= base_url()?>NiceAdmin/assets/img/favicon.png" rel="icon">
-  <link href="<?= base_url()?>NiceAdmin/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
   <!-- Google Fonts -->
-  <link href="https://fonts.gstatic.com" rel="preconnect">
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
-
-  <!-- Vendor CSS Files -->
-  <link href="<?= base_url()?>NiceAdmin/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="<?= base_url()?>NiceAdmin/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="<?= base_url()?>NiceAdmin/assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
-  <link href="<?= base_url()?>NiceAdmin/assets/vendor/quill/quill.snow.css" rel="stylesheet">
-  <link href="<?= base_url()?>NiceAdmin/assets/vendor/quill/quill.bubble.css" rel="stylesheet">
-  <link href="<?= base_url()?>NiceAdmin/assets/vendor/remixicon/remixicon.css" rel="stylesheet">
-  <link href="<?= base_url()?>NiceAdmin/assets/vendor/simple-datatables/style.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Tailwind CSS (Compiled) -->
   <link href="<?= base_url()?>assets/css/app.css" rel="stylesheet">
 
-  <!-- Template Main CSS File -->
-  <link href="<?= base_url()?>NiceAdmin/assets/css/style.css" rel="stylesheet">
-
-  <style>
-    /* Fix for Sidebar Visibility Conflict */
-    .sidebar-nav .nav-content.show {
-      visibility: visible !important;
-      display: block !important;
-    }
-    .sidebar-nav .nav-content.show a {
-      visibility: visible !important;
-    }
-    .sidebar-nav .nav-link:not(.collapsed) {
-        background-color: #f6f9ff !important;
-    }
-  </style>
-
-  <!-- =======================================================
-  * Template Name: NiceAdmin
-  * Updated: Mar 09 2023 with Bootstrap v5.2.3
-  * Template URL: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/
-  * Author: BootstrapMade.com
-  * License: https://bootstrapmade.com/license/
-  ======================================================== -->
 </head>
 
-<body>
+<body class="font-[Nunito]">
 
   <?= $this->include('Modules\Shared\Views\components\header') ?>
 
   <?= $this->include('Modules\Shared\Views\components\sidebar') ?>
 
-  <main id="main" class="main">
+  <main class="admin-main">
 
     <?= $this->renderSection('content') ?>
 
@@ -75,20 +41,101 @@ if(uri_string()!=""){
 
   <?= $this->include('Modules\Shared\Views\components\footer') ?>
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <!-- ApexCharts (for dashboard charts) -->
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <!-- ECharts (for pie charts) -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 
-  <!-- Vendor JS Files -->
-  <script src="<?= base_url()?>NiceAdmin/assets/vendor/apexcharts/apexcharts.min.js"></script>
-  <script src="<?= base_url()?>NiceAdmin/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="<?= base_url()?>NiceAdmin/assets/vendor/chart.js/chart.umd.js"></script>
-  <script src="<?= base_url()?>NiceAdmin/assets/vendor/echarts/echarts.min.js"></script>
-  <script src="<?= base_url()?>NiceAdmin/assets/vendor/quill/quill.min.js"></script>
-  <script src="<?= base_url()?>NiceAdmin/assets/vendor/simple-datatables/simple-datatables.js"></script>
-  <script src="<?= base_url()?>NiceAdmin/assets/vendor/tinymce/tinymce.min.js"></script>
-  <script src="<?= base_url()?>NiceAdmin/assets/vendor/php-email-form/validate.js"></script>
+  <!-- Admin Layout JS -->
+  <script>
+  (function() {
+    'use strict';
 
-  <!-- Template Main JS File -->
-  <script src="<?= base_url()?>NiceAdmin/assets/js/main.js"></script>
+    // Sidebar toggle
+    const toggleBtn = document.querySelector('.toggle-sidebar-btn');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', function(e) {
+        e.stopPropagation(); // Prevent immediate closing
+        const isMobile = window.innerWidth <= 1024;
+        if (isMobile) {
+          document.body.classList.toggle('sidebar-open');
+        } else {
+          document.body.classList.toggle('sidebar-closed');
+        }
+      });
+    }
+
+    // Close sidebar on mobile when clicking outside
+    document.addEventListener('click', function(e) {
+      if (window.innerWidth <= 1024 && document.body.classList.contains('sidebar-open')) {
+        const sidebar = document.querySelector('.admin-sidebar');
+        if (sidebar && !sidebar.contains(e.target)) {
+          document.body.classList.remove('sidebar-open');
+        }
+      }
+    });
+
+    // Sidebar collapsible sections
+    document.querySelectorAll('.admin-sidebar .nav-link[data-toggle="collapse"]').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('data-target'));
+        if (target) {
+          target.classList.toggle('open');
+          this.classList.toggle('expanded');
+        }
+      });
+    });
+
+    // Dropdown toggles
+    document.querySelectorAll('[data-dropdown]').forEach(trigger => {
+      trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const panel = document.querySelector(this.getAttribute('data-dropdown'));
+        // Close all other dropdowns
+        document.querySelectorAll('.dropdown-panel.show').forEach(p => {
+          if (p !== panel) p.classList.remove('show');
+        });
+        if (panel) panel.classList.toggle('show');
+      });
+    });
+
+    // Close dropdowns on outside click
+    document.addEventListener('click', function() {
+      document.querySelectorAll('.dropdown-panel.show').forEach(p => p.classList.remove('show'));
+    });
+
+    // Tabs
+      document.querySelectorAll('.tw-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        const group = this.closest('.tw-tabs');
+        
+        // Remove active from all tabs in group
+        group.querySelectorAll('.tw-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Show corresponding content
+        const target = this.getAttribute('data-tab');
+        const targetEl = document.querySelector(target);
+        if (targetEl) {
+          const contentContainer = targetEl.parentElement;
+          contentContainer.querySelectorAll('.tw-tab-content').forEach(c => c.classList.remove('active'));
+          targetEl.classList.add('active');
+        }
+      });
+    });
+
+    // Back to top
+    const backToTop = document.querySelector('.back-to-top');
+    if (backToTop) {
+      window.addEventListener('scroll', function() {
+        if (window.scrollY > 100) backToTop.classList.add('active');
+        else backToTop.classList.remove('active');
+      });
+    }
+  })();
+  </script>
 
 </body>
 

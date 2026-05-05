@@ -8,3 +8,12 @@ services:
       - /var/www/html/vendor
     environment:
       - CI_ENVIRONMENT=development
+    depends_on:
+      - tailwind
+
+  tailwind:
+    build: .
+    volumes:
+      - .:/var/www/html
+    working_dir: /var/www/html
+    command: tailwindcss -i public/assets/css/input.css -o public/assets/css/app.css --watch=always

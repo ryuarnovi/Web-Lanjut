@@ -26,8 +26,8 @@ RUN set -ex; \
     else \
         echo "Unsupported architecture: $ARCH"; exit 1; \
     fi; \
-    curl -sLO "https://github.com/tailwindlabs/tailwindcss/releases/latest/download/$TW_BINARY"; \
-    chmod +x "$TW_BINARY"; \
+    curl -sLO "https://github.com/tailwindlabs/tailwindcss/releases/latest/download/$TW_BINARY" && \
+    chmod +x "$TW_BINARY" && \
     mv "$TW_BINARY" /usr/local/bin/tailwindcss; \
     # Install Composer
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer; \
@@ -37,16 +37,15 @@ RUN set -ex; \
 # Copy project files
 COPY . .
 
-# Install PHP dependencies
-RUN composer install --no-interaction --optimize-autoloader --no-dev || true
+# Ensure permissions and install dependencies
+RUN mkdir -p writable && chown -R www-data:www-data writable
+ENV COMPOSER_ALLOW_SUPERUSER=1
+RUN composer install --no-interaction --optimize-autoloader
 
-# Build Tailwind CSS
-RUN tailwindcss -i public/assets/css/input.css -o public/assets/css/app.css
+# Build Tailwind CSS (Production)
+RUN tailwindcss -i public/assets/css/input.css -o public/assets/css/app.css --minify
 
 # Adjust Apache configuration for CodeIgniter's public folder
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
-
-# Set permissions for writable directory
-RUN chown -R www-data:www-data writable
 
 EXPOSE 80

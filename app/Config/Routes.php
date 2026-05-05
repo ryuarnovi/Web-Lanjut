@@ -29,10 +29,15 @@ $routes->group('dokter', function($routes) {
 $routes->group('apoteker', function($routes) {
     $routes->get('resep', '\Modules\Apoteker\Controllers\Apoteker::resep');
     $routes->get('stok', '\Modules\Apoteker\Controllers\Apoteker::stok');
+    $routes->get('form', '\Modules\Apoteker\Controllers\Apoteker::form');
 });
 
 // Kasir
-$routes->get('kasir/billing', '\Modules\Kasir\Controllers\Kasir::billing');
+$routes->group('kasir', function($routes) {
+    $routes->get('data', '\Modules\Kasir\Controllers\Kasir::data');
+    $routes->get('billing', '\Modules\Kasir\Controllers\Kasir::billing');
+    $routes->get('form', '\Modules\Kasir\Controllers\Kasir::form');
+});
 
 // Misc
 $routes->get('laporan', '\Modules\Dashboard\Controllers\Dashboard::laporan');
