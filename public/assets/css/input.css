@@ -29,7 +29,7 @@
 @layer components {
   /* ---------- Header ---------- */
   .admin-header {
-    position: fixed; top: 0; left: 0; right: 0; height: 60px; z-index: 50;
+    position: fixed; top: 0; left: 0; right: 0; height: 60px; z-index: 70;
     background: #fff; box-shadow: 0 2px 20px rgba(1,41,112,.08);
     display: flex; align-items: center; padding: 0 24px;
     transition: all 0.3s;
@@ -96,31 +96,37 @@
 
   /* ---------- Main Content ---------- */
   .admin-main {
-    margin-top: 60px; margin-left: 280px;
+    margin-top: 60px; margin-left: 0;
     padding: 24px 30px; transition: all 0.3s; min-height: calc(100vh - 60px);
   }
 
   /* ---------- Footer ---------- */
   .admin-footer {
-    margin-left: 280px; padding: 20px 30px;
+    margin-left: 0; padding: 20px 30px;
     font-size: 0.85rem; color: #899bbd; text-align: center;
     border-top: 1px solid #eceef1; transition: all 0.3s;
   }
 
-  /* ---------- Sidebar Toggle & Responsiveness ---------- */
-  body.sidebar-closed .admin-sidebar { width: 0; overflow: hidden; }
-  body.sidebar-closed .admin-main { margin-left: 0; }
-  body.sidebar-closed .admin-footer { margin-left: 0; }
+  /* ---------- Sidebar Toggle & Overlay (All Screens) ---------- */
+  .admin-sidebar {
+    position: fixed; top: 60px; left: -280px; bottom: 0; width: 280px;
+    z-index: 60; background: #fff; padding: 20px 0;
+    overflow-y: auto; border-right: 1px solid #eceef1;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body.sidebar-open { overflow: hidden; }
+  body.sidebar-open .admin-sidebar { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
+  
+  /* Overlay Backdrop */
+  body.sidebar-open::before {
+    content: ""; position: fixed; inset: 0; top: 60px; background: rgba(0,0,0,0.3); z-index: 55;
+    backdrop-filter: blur(2px);
+  }
 
   @media (max-width: 1024px) {
-    .admin-sidebar { left: -280px; }
-    .admin-main { margin-left: 0; padding: 16px; }
-    .admin-footer { margin-left: 0; }
-    
-    body.sidebar-open .admin-sidebar { left: 0; }
-    body.sidebar-open::before {
-      content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 35;
-    }
+    .admin-main { padding: 16px; }
+    .admin-header .search-bar { display: none; }
   }
 
   /* ---------- Dropdown ---------- */
@@ -265,15 +271,7 @@
   .tw-tab-content { display: none; }
   .tw-tab-content.active { display: block; }
 
-  /* ---------- Responsive ---------- */
-  @media (max-width: 1024px) {
-    .admin-sidebar { width: 0; overflow: hidden; }
-    .admin-main { margin-left: 0; }
-    .admin-footer { margin-left: 0; }
-    body.sidebar-open .admin-sidebar { width: 280px; }
-    body.sidebar-open .admin-main { margin-left: 280px; }
-    .admin-header .search-bar { display: none; }
-  }
+  /* Responsive utilities moved to main media query block above */
 
   /* ---------- Custom Klinik Utilities ---------- */
   .btn-klinik {

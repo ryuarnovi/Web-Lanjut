@@ -8,7 +8,7 @@
 - ✅ **Prototyping Views**: Pembuatan antarmuka pengguna (UI) CRUD dan Dashboard sudah responsif, dinamis, dan terstruktur. Sidebar beradaptasi berdasarkan *Role*.
 - ✅ **Responsive Fixes**: Telah memperbaiki *bug* UI di mana layout terhimpit di mode mobile dan grid layout telah dipercantik.
 - ✅ **NPM & Docker Integration**: Berhasil memindahkan sistem build Tailwind dari standalone CLI ke NPM-based workflow yang berjalan sepenuhnya di dalam Docker (Node.js 20).
-- ✅ **Responsive Charts**: Implementasi responsivitas otomatis pada ApexCharts dan ECharts di dashboard.
+- ✅ **Responsive Charts & Layout**: Implementasi responsivitas otomatis pada ApexCharts/ECharts serta sistem **Universal Sidebar Overlay** untuk mencegah tata letak halaman terhimpit di semua ukuran layar (Desktop & Mobile).
 
 ## Pekerjaan Selanjutnya (Global Tasks)
 1. **Pembuatan Database Schema**: Merancang relasi ERD untuk entitas User, Pasien, Dokter, Obat, Transaksi, dan Rekam Medis.

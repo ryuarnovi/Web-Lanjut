@@ -190,6 +190,7 @@
                 name: 'Kunjungan Poli',
                 type: 'pie',
                 radius: ['40%', '70%'],
+                center: ['50%', '60%'], // Better centering
                 avoidLabelOverlap: false,
                 label: { show: false, position: 'center' },
                 emphasis: { label: { show: true, fontSize: '18', fontWeight: 'bold' } },
@@ -201,7 +202,20 @@
                   { value: 484, name: 'Poli Mata' },
                   { value: 300, name: 'Radiologi' }
                 ]
-              }]
+              }],
+              // Built-in responsiveness
+              media: [
+                {
+                  query: { maxWidth: 500 },
+                  option: {
+                    legend: { bottom: '0', top: 'auto', orient: 'horizontal' },
+                    series: [{ 
+                      radius: ['35%', '60%'],
+                      center: ['50%', '40%'] 
+                    }]
+                  }
+                }
+              ]
             });
             
             // Handle ECharts responsiveness

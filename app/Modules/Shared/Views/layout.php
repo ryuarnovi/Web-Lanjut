@@ -52,29 +52,25 @@ if(uri_string()!=""){
     'use strict';
 
     // Sidebar toggle
-    const toggleBtn = document.querySelector('.toggle-sidebar-btn');
-    if (toggleBtn) {
-      toggleBtn.addEventListener('click', function(e) {
-        e.stopPropagation(); // Prevent immediate closing
-        const isMobile = window.innerWidth <= 1024;
-        if (isMobile) {
-          document.body.classList.toggle('sidebar-open');
-        } else {
-          document.body.classList.toggle('sidebar-closed');
-        }
+    const toggleBtns = document.querySelectorAll('.toggle-sidebar-btn');
+    toggleBtns.forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.body.classList.toggle('sidebar-open');
         
         // Trigger resize for charts
         setTimeout(() => {
           window.dispatchEvent(new Event('resize'));
         }, 300);
       });
-    }
+    });
 
-    // Close sidebar on mobile when clicking outside
+    // Close sidebar when clicking outside (on overlay/backdrop)
     document.addEventListener('click', function(e) {
-      if (window.innerWidth <= 1024 && document.body.classList.contains('sidebar-open')) {
+      if (document.body.classList.contains('sidebar-open')) {
         const sidebar = document.querySelector('.admin-sidebar');
-        if (sidebar && !sidebar.contains(e.target)) {
+        const header = document.querySelector('.admin-header');
+        if (sidebar && !sidebar.contains(e.target) && header && !header.contains(e.target)) {
           document.body.classList.remove('sidebar-open');
         }
       }
