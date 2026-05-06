@@ -5,41 +5,49 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->get('/', '\Modules\Dashboard\Controllers\Dashboard::index');
-$routes->get('/dashboard', '\Modules\Dashboard\Controllers\Dashboard::index');
 
-// Auth
+// --- HALAMAN PUBLIK (TANPA AUTH) ---
 $routes->get('login', '\Modules\Auth\Controllers\Auth::index');
 $routes->post('login/auth', '\Modules\Auth\Controllers\Auth::login');
 $routes->get('logout', '\Modules\Auth\Controllers\Auth::logout');
 
-// Resepsionis
-$routes->group('resepsionis', function($routes) {
-    $routes->get('pendaftaran', '\Modules\Resepsionis\Controllers\Resepsionis::pendaftaran');
-    $routes->get('antrean', '\Modules\Resepsionis\Controllers\Resepsionis::antrean');
-});
 
-// Dokter
-$routes->group('dokter', function($routes) {
-    $routes->get('antrean', '\Modules\Dokter\Controllers\Dokter::antrean');
-    $routes->get('soap', '\Modules\Dokter\Controllers\Dokter::soap');
-});
+// --- HALAMAN TERPROTEKSI (PERLU LOGIN) ---
+$routes->group('', ['filter' => 'auth'], function($routes) {
+    
+    // Dashboard (Semua role yang login bisa akses)
+    $routes->get('/', '\Modules\Dashboard\Controllers\Dashboard::index');
+    $routes->get('dashboard', '\Modules\Dashboard\Controllers\Dashboard::index');
+    
+    // Fitur Umum (Profile, Pengaturan, Laporan)
+    $routes->get('laporan', '\Modules\Dashboard\Controllers\Dashboard::laporan');
+    $routes->get('profile', '\Modules\Dashboard\Controllers\Dashboard::profile');
+    $routes->get('pengaturan', '\Modules\Dashboard\Controllers\Dashboard::pengaturan');
 
-// Apoteker
-$routes->group('apoteker', function($routes) {
-    $routes->get('resep', '\Modules\Apoteker\Controllers\Apoteker::resep');
-    $routes->get('stok', '\Modules\Apoteker\Controllers\Apoteker::stok');
-    $routes->get('form', '\Modules\Apoteker\Controllers\Apoteker::form');
-});
 
-// Kasir
-$routes->group('kasir', function($routes) {
-    $routes->get('data', '\Modules\Kasir\Controllers\Kasir::data');
-    $routes->get('billing', '\Modules\Kasir\Controllers\Kasir::billing');
-    $routes->get('form', '\Modules\Kasir\Controllers\Kasir::form');
-});
+    // Resepsionis (Admin & Resepsionis saja)
+    $routes->group('resepsionis', ['filter' => 'auth:admin,resepsionis'], function($routes) {
+        $routes->get('pendaftaran', '\Modules\Resepsionis\Controllers\Resepsionis::pendaftaran');
+        $routes->get('antrean', '\Modules\Resepsionis\Controllers\Resepsionis::antrean');
+    });
 
-// Misc
-$routes->get('laporan', '\Modules\Dashboard\Controllers\Dashboard::laporan');
-$routes->get('profile', '\Modules\Dashboard\Controllers\Dashboard::profile');
-$routes->get('pengaturan', '\Modules\Dashboard\Controllers\Dashboard::pengaturan');
+    // Dokter (Admin & Dokter saja)
+    $routes->group('dokter', ['filter' => 'auth:admin,dokter'], function($routes) {
+        $routes->get('antrean', '\Modules\Dokter\Controllers\Dokter::antrean');
+        $routes->get('soap', '\Modules\Dokter\Controllers\Dokter::soap');
+    });
+
+    // Apoteker (Admin & Apoteker saja)
+    $routes->group('apoteker', ['filter' => 'auth:admin,apoteker'], function($routes) {
+        $routes->get('resep', '\Modules\Apoteker\Controllers\Apoteker::resep');
+        $routes->get('stok', '\Modules\Apoteker\Controllers\Apoteker::stok');
+        $routes->get('form', '\Modules\Apoteker\Controllers\Apoteker::form');
+    });
+
+    // Kasir (Admin & Kasir saja)
+    $routes->group('kasir', ['filter' => 'auth:admin,kasir'], function($routes) {
+        $routes->get('data', '\Modules\Kasir\Controllers\Kasir::data');
+        $routes->get('billing', '\Modules\Kasir\Controllers\Kasir::billing');
+        $routes->get('form', '\Modules\Kasir\Controllers\Kasir::form');
+    });
+});
