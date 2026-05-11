@@ -15,4 +15,9 @@ class Apoteker extends BaseController
     {
         return view('Modules\Apoteker\Views\stok', ['title' => 'Stok Obat & Inventaris - KlinikOS 2.0']);
     }
+
+    public function form()
+    {
+        return view('Modules\Apoteker\Views\form', ['title' => 'Tambah Stok Obat - KlinikOS 2.0']);
+    }
 }

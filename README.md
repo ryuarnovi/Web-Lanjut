@@ -1,104 +1,108 @@
-# 🏥 KlinikOS 2.0 - Clinical Management System
+# KlinikOS 2.0 - Clinical Management System
 
-Sistem manajemen klinik modern berbasis **CodeIgniter 4** dengan arsitektur **Modular** dan styling menggunakan **TailwindCSS v4** & **NiceAdmin (Bootstrap 5)**. Proyek ini dirancang untuk skalabilitas tinggi dan kemudahan pemeliharaan.
+KlinikOS 2.0 is a modern, scalable clinical management system built on the CodeIgniter 4 framework. It utilizes a Modular (HMVC) architecture to ensure separation of concerns and maintainability across various clinical operations. The user interface is strictly styled using Tailwind CSS v4, delivering a responsive and highly performant experience.
 
----
+## Project Structure (Modular Architecture)
 
-## 📂 Struktur Proyek (Modular)
-
-KlinikOS menggunakan pendekatan modular di mana setiap fitur utama memiliki "ruang" sendiri. Semua logika bisnis berada di dalam folder `app/Modules`.
+KlinikOS utilizes a modular approach where each primary feature is isolated within the `app/Modules` directory. This ensures that business logic, controllers, and views are encapsulated per domain.
 
 ```text
 KlinikOS/
 ├── app/
-│   ├── Modules/              <-- Jantung aplikasi
-│   │   ├── Auth/             (Login/Logout/RBAC)
-│   │   ├── Dashboard/        (Home, Profile, Reports)
-│   │   ├── Resepsionis/      (Pendaftaran & Antrean)
-│   │   ├── Dokter/           (SOAP, Diagnosis, EMR)
-│   │   ├── Apoteker/         (Farmasi, Inventory)
-│   │   ├── Kasir/            (Billing, Payments)
-│   │   └── Shared/           (Layout, Sidebar, Header global)
-│   └── Config/               (Autoload.php terdaftar untuk Modules)
+│   ├── Modules/              
+│   │   ├── Auth/             (Authentication, Session, Role-Based Access Control)
+│   │   ├── Dashboard/        (Home, User Profile, Reports)
+│   │   ├── Resepsionis/      (Patient Registration & Queue Management)
+│   │   ├── Dokter/           (Medical Assessment, EMR, SOAP, E-Prescription)
+│   │   ├── Apoteker/         (Pharmacy, Inventory Management)
+│   │   ├── Kasir/            (Billing, Invoicing, Payment Gateway)
+│   │   └── Shared/           (Global Layouts, Sidebar, Header components)
+│   └── Config/               (Autoload configurations for Modules)
 ├── public/
-│   └── assets/               (Compiled CSS, Images, Vendor JS)
-├── docker-compose.yml        (Konfigurasi Orchestration)
-└── Dockerfile                (Build image PHP 8.4-apache)
+│   └── assets/               (Compiled CSS, Static Images, Vendor JS)
+├── docker-compose.yml        (Container orchestration configuration)
+└── Dockerfile                (Build instructions for PHP 8.4-apache image)
 ```
 
----
+## Setup and Installation
 
-## 🛠️ Panduan Instalasi (Docker)
+The development and production environments are strictly containerized using Docker. Follow these instructions to deploy the application locally.
 
-Ikuti langkah-langkah berikut untuk menjalankan proyek di lingkungan lokal Anda:
-
-### 1. Persiapkan Environment
-Copy file `env.example` menjadi `.env`:
+### 1. Environment Configuration
+Copy the example environment file to initialize your local configuration:
 ```bash
 cp env.example .env
 ```
 
-### 2. Jalankan Docker
-Gunakan Docker Compose untuk membuild image dan menjalankan container:
+### 2. Docker Orchestration
+Use Docker Compose to build the required images and start the containers.
+*Note: The build process now automatically installs Node.js 20 and dependencies (NPM & Composer) inside the container.*
 ```bash
 docker compose up --build -d
 ```
-*Gunakan flag `-d` untuk menjalankan di background.*
+*Note: The `-d` flag runs the containers in the background.*
 
-### 3. Akses Aplikasi
-Buka browser dan akses URL berikut:
+### 3. Application Access
+Once the containers are running, access the application via your web browser:
 - **URL**: `http://localhost:9092`
-- **Kredensial Default**:
+- **Default Credentials**:
   - Username: `admin`
   - Password: `admin`
 
----
+## Development Guidelines
 
-## 🎨 Pengembangan UI (TailwindCSS v4)
+### Tailwind CSS v4 Build System
+The project uses Tailwind CSS v4 with an NPM-based workflow integrated into Docker. You do not need Node.js or the Tailwind binary on your host machine.
 
-Proyek ini menggunakan **TailwindCSS v4 Standalone CLI** (tanpa Node.js di host). Binary `tailwindcss` sudah tersedia di root proyek.
+- **Development (Automatic)**:
+  The `tailwind` service in `docker-compose.yml` automatically watches for changes and recompiles CSS using `npm run dev`.
+- **Production Build (Manual/CI)**:
+  The Dockerfile automatically runs `npm run build` during the image creation process.
 
-- **Watch Mode (Mac/Linux)**:
-  ```bash
-  ./tailwindcss -i public/assets/css/input.css -o public/assets/css/app.css --watch
-  ```
-- **Build Mode**:
-  ```bash
-  ./tailwindcss -i public/assets/css/input.css -o public/assets/css/app.css
-  ```
+### Navbar & Navigation
 
----
+- The frontend includes a responsive navbar used across module views (see `app/Modules/general/Views/General.php`).
+- Links: `Tentang`, `Layanan`, `Dokter`, `Kontak` and a prominent `Booking` CTA. On small screens a mobile menu toggle is shown.
+- To update labels or targets, edit the markup in `app/Modules/general/Views/General.php` or move the navbar into the `Shared` module for global reuse.
+- Use `<?= base_url('path/to/page') ?>` when linking to internal routes so URLs remain valid across environments and Docker containers.
 
-## ⚠️ Troubleshooting (Penting)
+### General Notes
+- **Creating New Modules**: To add a new module, create a new directory under `app/Modules/` containing the respective `Controllers`, `Views`, and `Models`. The namespace is automatically detected via `app/Config/Autoload.php`.
+- **Asset Referencing**: Always utilize the `base_url()` helper function when calling static assets to ensure link validity across different environments and Docker setups.
 
-### 1. Error Permission `writable` Folder
-Jika Anda melihat error *Permission Denied* pada folder `writable`, jalankan perintah berikut di host (Mac/Linux):
+## Troubleshooting
+
+### 1. Writable Directory Permission Denied
+If you encounter permission errors regarding the `writable` directory, adjust the ownership from within the host or container:
 ```bash
+# Host Machine (Mac/Linux)
 chmod -R 777 writable
-```
-Atau masuk ke container dan ubah owner-nya:
-```bash
-docker exec -it tugas-app-1 chown -R www-data:www-data writable
+
+# Or inside the Docker Container
+docker exec -it web-lanjut-app-1 chown -R www-data:www-data writable
 ```
 
 ### 2. Port Conflict (9092)
-Jika port `9092` sudah digunakan aplikasi lain, ubah angka kiri pada `docker-compose.yml`:
+If port `9092` is already bound to another service on your host machine, modify the port mapping in the `docker-compose.yml` file:
 ```yaml
 ports:
-  - "9093:80" # Ubah 9092 menjadi 9093
+  - "9093:80"
 ```
 
-### 3. Tailwind Binary Error
-Jika binary `./tailwindcss` tidak bisa dieksekusi, berikan akses execute:
+### 3. Tailwind Recompilation Issues
+If the CSS does not update, ensure the `tailwind` service is running in Docker:
 ```bash
-chmod +x tailwindcss
+docker compose ps
 ```
+If it's down, restart it: `docker compose up -d tailwind`.
 
----
+## Project Documentation
 
-## 📝 Catatan Pengembangan
-- **Menambah Modul Baru**: Buat folder di `app/Modules/`, tambahkan Controller, View, dan Model. Namespace akan otomatis terdeteksi karena sudah terdaftar di `app/Config/Autoload.php`.
-- **Assets**: Selalu gunakan `base_url()` untuk memanggil asset agar link tetap valid di Docker.
+Detailed documentation regarding logic implementation, feature roadmaps, known issues, and testing scenarios have been segregated per module. Please refer to the following documents in the `docs/` directory:
 
----
-Dikembangkan dengan ❤️ oleh **Tim KlinikOS**
+1. [Global Progress & Roadmap](docs/PROGRESS.md)
+2. [Resepsionis Logic (Front Desk)](docs/FEATURE_RESEPSIONIS.md)
+3. [Dokter Logic (Medical Services)](docs/FEATURE_DOKTER.md)
+4. [Apoteker Logic (Pharmacy & Inventory)](docs/FEATURE_APOTEKER.md)
+5. [Kasir Logic (Billing & Payment)](docs/FEATURE_KASIR.md)
+6. [Core Logic (Authentication, Reports, Settings)](docs/FEATURE_CORE.md)
