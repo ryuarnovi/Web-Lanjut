@@ -2,9 +2,10 @@ services:
   app:
     build: .
     ports:
-    - "9092:80"
+      - "9092:80"
     volumes:
       - .:/var/www/html
       - /var/www/html/vendor
     environment:
       - CI_ENVIRONMENT=development
+    command: sh -c "tailwindcss -i public/assets/css/input.css -o public/assets/css/app.css --watch & apache2-foreground"
