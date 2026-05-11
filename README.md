@@ -59,6 +59,13 @@ The project uses Tailwind CSS v4 with an NPM-based workflow integrated into Dock
 - **Production Build (Manual/CI)**:
   The Dockerfile automatically runs `npm run build` during the image creation process.
 
+### Navbar & Navigation
+
+- The frontend includes a responsive navbar used across module views (see `app/Modules/general/Views/General.php`).
+- Links: `Tentang`, `Layanan`, `Dokter`, `Kontak` and a prominent `Booking` CTA. On small screens a mobile menu toggle is shown.
+- To update labels or targets, edit the markup in `app/Modules/general/Views/General.php` or move the navbar into the `Shared` module for global reuse.
+- Use `<?= base_url('path/to/page') ?>` when linking to internal routes so URLs remain valid across environments and Docker containers.
+
 ### General Notes
 - **Creating New Modules**: To add a new module, create a new directory under `app/Modules/` containing the respective `Controllers`, `Views`, and `Models`. The namespace is automatically detected via `app/Config/Autoload.php`.
 - **Asset Referencing**: Always utilize the `base_url()` helper function when calling static assets to ensure link validity across different environments and Docker setups.

@@ -51,3 +51,8 @@ $routes->group('', ['filter' => 'auth'], function($routes) {
         $routes->get('form', '\Modules\Kasir\Controllers\Kasir::form');
     });
 });
+
+$routes->get('general', '\Modules\General\Controllers\General::General');
+$routes->get('service', '\Modules\General\Controllers\General::Service');
+$routes->get('about', '\Modules\General\Controllers\General::About');
+$routes->get('contact', '\Modules\General\Controllers\General::Contact');
