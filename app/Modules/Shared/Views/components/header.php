@@ -2,10 +2,14 @@
   <header class="admin-header">
 
     <div class="flex items-center gap-4">
-      <a href="<?= base_url() ?>" class="logo">
-        <img src="<?= base_url()?>NiceAdmin/assets/img/logo.png" alt="">
-        <span class="d-none d-lg-block">KlinikOS 2.0</span>
-      </a>
+      <a href="<?= base_url('/') ?>" class="flex items-center gap-3">
+            <img src="<?= base_url('NiceAdmin/assets/img/logo.png') ?>"
+                 alt="KlinikOS Logo" class="w-10 h-10 object-contain">
+            <div class="flex flex-col leading-tight">
+                <span class="text-2xl font-extrabold text-[#1029d0] tracking-tight">KlinikOS 2.0</span>
+                <span class="text-xs text-slate-500 font-medium hidden md:block">Sistem Klinik Modern</span>
+            </div>
+        </a>
       <button class="toggle-sidebar-btn p-2 rounded-lg hover:bg-slate-100 transition cursor-pointer">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-klinik-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />

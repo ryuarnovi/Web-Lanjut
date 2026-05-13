@@ -102,9 +102,11 @@
 
   /* ---------- Footer ---------- */
   .admin-footer {
-    margin-left: 0; padding: 20px 30px;
-    font-size: 0.85rem; color: #899bbd; text-align: center;
-    border-top: 1px solid #eceef1; transition: all 0.3s;
+    margin-left: 0;
+    background: #021b3b;
+    color: rgba(255,255,255,0.5);
+    border-top: none;
+    transition: all 0.3s;
   }
 
   /* ---------- Sidebar Toggle & Overlay (All Screens) ---------- */

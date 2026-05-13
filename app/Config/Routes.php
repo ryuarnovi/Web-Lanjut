@@ -7,6 +7,7 @@ use CodeIgniter\Router\RouteCollection;
  */
 
 // --- HALAMAN PUBLIK (TANPA AUTH) ---
+$routes->get('/', '\Modules\General\Controllers\General::General');
 $routes->get('login', '\Modules\Auth\Controllers\Auth::index');
 $routes->post('login/auth', '\Modules\Auth\Controllers\Auth::login');
 $routes->get('logout', '\Modules\Auth\Controllers\Auth::logout');
@@ -16,14 +17,12 @@ $routes->get('logout', '\Modules\Auth\Controllers\Auth::logout');
 $routes->group('', ['filter' => 'auth'], function($routes) {
     
     // Dashboard (Semua role yang login bisa akses)
-    $routes->get('/', '\Modules\Dashboard\Controllers\Dashboard::index');
     $routes->get('dashboard', '\Modules\Dashboard\Controllers\Dashboard::index');
     
     // Fitur Umum (Profile, Pengaturan, Laporan)
     $routes->get('laporan', '\Modules\Dashboard\Controllers\Dashboard::laporan');
     $routes->get('profile', '\Modules\Dashboard\Controllers\Dashboard::profile');
     $routes->get('pengaturan', '\Modules\Dashboard\Controllers\Dashboard::pengaturan');
-
 
     // Resepsionis (Admin & Resepsionis saja)
     $routes->group('resepsionis', ['filter' => 'auth:admin,resepsionis'], function($routes) {
