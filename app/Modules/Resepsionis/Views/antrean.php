@@ -141,21 +141,22 @@ function getAvailableLoket() {
     return LOKETS.find(l => l.status === 'available');
 }
 
-function startLoketTimer(loket, queueId, queueNumber, patientName) {
+function startLoketTimer(loket, queueId, queueNumber, patientName, remaining) {
     loket.status = 'busy';
     loket.queueId = queueId;
     loket.queueNumber = queueNumber;
     loket.patientName = patientName;
-    loket.remaining = 10;
+    loket.remaining = remaining != null ? remaining : 10;
     renderLoketPanel();
 
     if (loket.timer) clearInterval(loket.timer);
+    const maxDur = 10;
     loket.timer = setInterval(async () => {
         loket.remaining--;
         const timerEl = document.getElementById('timer-' + loket.id);
         const progEl = document.getElementById('progress-' + loket.id);
         if (timerEl) timerEl.textContent = loket.remaining + 's';
-        if (progEl) progEl.style.width = (loket.remaining / 10 * 100) + '%';
+        if (progEl) progEl.style.width = (loket.remaining / maxDur * 100) + '%';
 
         if (loket.remaining <= 0) {
             clearInterval(loket.timer);
@@ -180,33 +181,49 @@ async function loadQueueTable() {
         const res = await fetch('/api/queues');
         const json = await res.json();
         const list = json.data || [];
+        const now = Date.now();
 
-        // Sync loket status from DB
+        // Reset all lokets first, then re-assign from DB
+        LOKETS.forEach(l => {
+            if (l.timer) clearInterval(l.timer);
+            l.timer = null;
+            l.status = 'available';
+            l.queueId = null;
+            l.queueNumber = null;
+            l.patientName = null;
+            l.remaining = 0;
+        });
+
+        // Assign called queues to their lokets
         list.forEach(q => {
             if (q.loket && q.status === 'called') {
                 const loket = LOKETS.find(l => l.name === q.loket);
-                if (loket && loket.status === 'available') {
+                if (loket) {
                     loket.status = 'busy';
                     loket.queueId = q.id;
                     loket.queueNumber = q.queue_number;
                     loket.patientName = q.patient_name;
-                    if (!loket.timer) {
-                        loket.remaining = 10;
-                        startLoketTimer(loket, q.id, q.queue_number, q.patient_name);
-                    }
-                }
-            }
-            if (q.status === 'completed' || q.status === 'waiting') {
-                const loket = LOKETS.find(l => l.queueId === q.id);
-                if (loket && q.status !== 'called') {
-                    loket.status = 'available';
-                    loket.queueId = null;
-                    loket.queueNumber = null;
-                    loket.patientName = null;
-                    if (loket.timer) { clearInterval(loket.timer); loket.timer = null; }
+                    const calledAt = q.called_at ? new Date(q.called_at).getTime() : now;
+                    const elapsed = Math.floor((now - calledAt) / 1000);
+                    loket.remaining = Math.max(0, 10 - elapsed);
+                    startLoketTimer(loket, q.id, q.queue_number, q.patient_name, loket.remaining);
                 }
             }
         });
+
+        // Update counter cards
+        const called = list.filter(q => q.status === 'called' && q.loket);
+        const waiting = list.filter(q => q.status === 'waiting');
+        const cardTitles = document.querySelectorAll('.rounded-2xl.bg-klinik-primary h1, .rounded-2xl.bg-green-500 h1, .rounded-2xl.bg-cyan-500 h1');
+        if (cardTitles.length >= 3) {
+            const lokets = ['Loket 1', 'Loket 2', 'Loket 3'];
+            for (let i = 0; i < 3; i++) {
+                const qCalled = called.find(q => q.loket === lokets[i]);
+                const qWaiting = waiting[i];
+                cardTitles[i].textContent = qCalled ? qCalled.queue_number : (qWaiting ? qWaiting.queue_number : '—');
+            }
+        }
+
         renderLoketPanel();
 
         tbody.innerHTML = list.length ? list.map(q => {
@@ -234,7 +251,7 @@ async function panggil(id, queueNumber, patientName) {
     const loket = getAvailableLoket();
     if (!loket) return alert('Semua loket sedang sibuk. Harap tunggu hingga ada yang tersedia.');
     try {
-        const res = await fetch('/api/queues/' + id, { method:'PUT', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify({ status:'called', loket: loket.name }) });
+        const res = await fetch('/api/queues/' + id, { method:'PUT', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify({ status:'called', loket: loket.name, called_at: new Date().toISOString().slice(0,19).replace('T',' ') }) });
         const json = await res.json();
         if (res.ok) {
             startLoketTimer(loket, id, queueNumber, patientName);

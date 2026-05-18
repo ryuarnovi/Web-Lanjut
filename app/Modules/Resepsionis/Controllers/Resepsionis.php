@@ -161,8 +161,9 @@ class Resepsionis extends BaseController
     {
         $input = $this->request->getJSON(true);
 
-        $queueNumber = $input['queue_number'] ?? ('Q' . substr(time(), 7));
         $queueDate = $input['queue_date'] ?? date('Y-m-d');
+        $todayCount = $this->db->query("SELECT COUNT(*) as c FROM queues WHERE queue_date = ?", [$queueDate])->getRow()->c;
+        $queueNumber = $input['queue_number'] ?? sprintf('%03d', $todayCount + 1);
 
         $this->db->query("INSERT INTO queues (patient_id, queue_number, queue_date, status, created_by, doctor_id, nurse_id, loket, created_at) VALUES (?, ?, ?, 'waiting', ?, ?, ?, ?, NOW())", [
             $input['patient_id'], $queueNumber, $queueDate,

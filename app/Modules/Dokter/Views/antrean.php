@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 async function panggilPasien(id) {
     try {
-        const res = await fetch('/api/queues/' + id, { method:'PUT', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify({ status:'called', loket: 'Loket Dokter' }) });
+        const res = await fetch('/api/queues/' + id, { method:'PUT', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify({ status:'called', loket: 'Loket Dokter', called_at: new Date().toISOString().slice(0,19).replace('T',' ') }) });
         const json = await res.json();
         if (res.ok) { alert('Pasien dipanggil'); setTimeout(() => location.reload(), 10000); }
         else { alert(json.error || 'Gagal'); }
