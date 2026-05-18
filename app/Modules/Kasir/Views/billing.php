@@ -116,4 +116,50 @@
       </div>
   </div>
 </section>
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    const params = new URLSearchParams(window.location.search);
+    const paymentId = params.get('id');
+    const invoice = params.get('inv');
+    if (invoice) {
+        document.querySelector('.card-title .badge').textContent = '#' + invoice;
+    }
+    if (paymentId) {
+        try {
+            const res = await fetch('/api/payments');
+            const json = await res.json();
+            const payments = json.data || [];
+            const p = payments.find(pay => pay.id == paymentId);
+            if (p) {
+                const total = parseInt(p.total || 0);
+                document.querySelector('.text-lg.text-klinik-primary').textContent = 'Rp ' + total.toLocaleString();
+                document.querySelector('input[type="number"]').placeholder = total;
+                const changeEl = document.querySelector('.font-bold.text-lg.text-amber-700');
+                if (changeEl) changeEl.textContent = 'Rp ' + total.toLocaleString();
+            }
+        } catch(e) {}
+    }
+    const btnBayar = document.querySelector('button.btn-success');
+    const inputNominal = document.querySelector('input[type="number"]');
+    inputNominal?.addEventListener('input', function() {
+        const total = parseInt(this.placeholder.replace(/[^0-9]/g,'') || 0);
+        const bayar = parseInt(this.value || 0);
+        const changeEl = document.querySelector('.font-bold.text-lg.text-amber-700');
+        if (changeEl) changeEl.textContent = 'Rp ' + Math.max(0, bayar - total).toLocaleString();
+    });
+    if (btnBayar) {
+        btnBayar.addEventListener('click', async function() {
+            const nominal = parseInt(inputNominal?.value || 0);
+            const metode = document.querySelector('select')?.value || 'Tunai';
+            if (!paymentId) return alert('ID pembayaran tidak tersedia');
+            try {
+                const res = await fetch('/api/payments/' + paymentId, { method:'PUT', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify({ status:'paid', paid_amount: nominal, change_amount: 0, payment_method: metode }) });
+                const json = await res.json();
+                alert(json.message || (res.ok ? 'Pembayaran berhasil' : 'Gagal'));
+                if (res.ok) window.location.href = '<?= base_url("kasir/data") ?>';
+            } catch(e) { alert('Network error'); }
+        });
+    }
+});
+</script>
 <?= $this->endSection() ?>

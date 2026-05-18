@@ -102,4 +102,26 @@
     </div>
   </div>
 </section>
+<script>
+document.querySelector('.btn-primary.px-8')?.addEventListener('click', async function() {
+    const allInputs = document.querySelectorAll('input:not([readonly])');
+    const allSelects = document.querySelectorAll('select');
+    const data = {
+        nama_obat: document.querySelector('input[placeholder*="nama obat"]')?.value || '',
+        kategori: allSelects[0]?.value || '',
+        bentuk_sediaan: allSelects[1]?.value || '',
+        harga_beli: parseInt(allInputs[0]?.value || 0),
+        harga_jual_eceran: parseInt(allInputs[1]?.value || 0),
+        stok_obat: parseInt(allInputs[2]?.value || 0),
+        min_stock: parseInt(allInputs[3]?.value || 0),
+        expiry_date: document.querySelector('input[type="date"]')?.value || ''
+    };
+    try {
+        const res = await fetch('/api/drugs', { method:'POST', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify(data) });
+        const json = await res.json();
+        alert(json.message || (res.ok ? 'Obat berhasil ditambahkan' : 'Gagal menyimpan'));
+        if (res.ok) window.location.reload();
+    } catch(e) { alert('Network error'); }
+});
+</script>
 <?= $this->endSection() ?>

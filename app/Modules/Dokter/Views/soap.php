@@ -153,4 +153,42 @@
     </div>
   </div>
 </section>
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    const params = new URLSearchParams(window.location.search);
+    const queueId = params.get('queue_id');
+    if (queueId) {
+        try {
+            const res = await fetch('/api/queues/' + queueId);
+            const json = await res.json();
+            if (json.data) {
+                const p = json.data;
+                document.querySelector('.alert-secondary h6').textContent = 'Identitas Pasien: ' + (p.pasien_nama || p.nama_pasien || '-');
+                document.querySelector('.alert-secondary p').innerHTML = 'Usia: ' + (p.usia || '?') + ' Thn | Jenis Kelamin: ' + (p.jenis_kelamin || '-') + ' | No. Antrean: ' + (p.nomor_antrean || p.no_antrean || '-');
+            }
+        } catch(e) {}
+    }
+    const btnSimpan = document.querySelector('button.btn-success');
+    if (btnSimpan) {
+        btnSimpan.addEventListener('click', async function() {
+            const texts = document.querySelectorAll('textarea');
+            const diagnoses = document.querySelectorAll('select');
+            const formData = {
+                queue_id: queueId || '',
+                subjective: texts[0]?.value || '',
+                objective: texts[1]?.value || '',
+                assessment: texts[2]?.value || '',
+                diagnosis_code: diagnoses[0]?.value || '',
+                plan: texts[3]?.value || ''
+            };
+            try {
+                const res = await fetch('/api/medical-records', { method:'POST', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify(formData) });
+                const json = await res.json();
+                alert(json.message || (res.ok ? 'Rekam medis disimpan' : 'Gagal menyimpan'));
+                if (res.ok) window.location.href = '<?= base_url("dokter/antrean") ?>';
+            } catch(e) { alert('Network error'); }
+        });
+    }
+});
+</script>
 <?= $this->endSection() ?>

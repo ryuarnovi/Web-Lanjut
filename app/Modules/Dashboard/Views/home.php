@@ -237,4 +237,59 @@
     </div>
   </div>
 </section>
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        const [resKunjungan, resPatients, resQueues] = await Promise.all([
+            fetch('/api/queues?limit=100'),
+            fetch('/api/patients?limit=100'),
+            fetch('/api/queues?status=waiting')
+        ]);
+        const jsonK = await resKunjungan.json();
+        const jsonP = await resPatients.json();
+        const jsonQ = await resQueues.json();
+        const queues = jsonK.data || [];
+        const patients = jsonP.data || [];
+        const waiting = jsonQ.data || [];
+        const todayQueues = queues.length;
+        const todayPatients = patients.length;
+        const kunjunganEl = document.querySelector('.info-card.sales-card')?.closest('.card')?.querySelector('h6');
+        const pasienEl = document.querySelector('.info-card.customers-card')?.closest('.card')?.querySelector('h6');
+        const antreanTbody = document.querySelector('.tw-table tbody');
+        if (kunjunganEl) kunjunganEl.textContent = todayQueues;
+        if (pasienEl) pasienEl.textContent = todayPatients;
+        if (antreanTbody) {
+            antreanTbody.innerHTML = waiting.slice(0,5).map(q => {
+                const statusMap = { 'waiting':'badge-info', 'in_progress':'badge-warning', 'completed':'badge-success', 'called':'badge-primary' };
+                const badge = statusMap[q.status] || 'badge-secondary';
+                const label = q.status === 'waiting' ? 'Menunggu' : q.status === 'in_progress' ? 'Dalam Pemeriksaan' : q.status === 'completed' ? 'Selesai' : q.status || '-';
+                return `<tr>
+                    <td><a href="#" class="font-bold text-klinik-primary">${q.queue_number || '-'}</a></td>
+                    <td>${q.patient_name || '-'}</td>
+                    <td>${q.doctor_id ? 'Poli' : '-'}</td>
+                    <td>-</td>
+                    <td><span class="badge ${badge}">${label}</span></td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="5" class="text-center py-4 text-slate-400">Tidak ada antrean aktif</td></tr>';
+        }
+    } catch(e) {}
+    try {
+        const resLogs = await fetch('/api/activity-logs?limit=5');
+        const jsonLogs = await resLogs.json();
+        const logs = jsonLogs.data || [];
+        const activityEl = document.querySelector('.activity');
+        if (activityEl && logs.length) {
+            activityEl.innerHTML = logs.map(log => {
+                const colors = ['text-green-500', 'text-blue-500', 'text-amber-500', 'text-purple-500'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                return `<div class="activity-item">
+                    <div class="activite-label">${log.created_at ? log.created_at.slice(11,16) : '-'}</div>
+                    <div class="activity-badge ${color}">●</div>
+                    <div class="activity-content">${log.aksi || log.activity || log.keterangan || '-'}</div>
+                </div>`;
+            }).join('');
+        }
+    } catch(e) {}
+});
+</script>
 <?= $this->endSection() ?>

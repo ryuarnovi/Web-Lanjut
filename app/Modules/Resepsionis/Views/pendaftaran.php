@@ -182,4 +182,48 @@
     </div>
   </div>
 </section>
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    const tbody = document.querySelector('.tw-table tbody');
+    if (tbody) {
+        try {
+            const res = await fetch('/api/patients');
+            const json = await res.json();
+            const list = json.data || [];
+            tbody.innerHTML = list.length ? list.slice(0,10).map(p => {
+                const poliLabel = 'Umum';
+                const poliColor = 'bg-blue-50 text-blue-600';
+                return `<tr>
+                    <td class="font-bold text-klinik-primary text-lg">${p.id || '-'}</td>
+                    <td><div class="flex flex-col"><span class="font-bold text-slate-800">${p.full_name || '-'}</span><span class="text-xs text-slate-500">NIK: ${(p.nik || '').slice(0,8)}****</span></div></td>
+                    <td><span class="badge ${poliColor}">${poliLabel}</span></td>
+                    <td class="text-slate-500 text-sm font-medium">${p.created_at ? p.created_at.slice(11,16) : '-'} WIB</td>
+                    <td><span class="badge badge-warning">Menunggu</span></td>
+                </tr>`;
+            }).join('') : '<tr><td colspan="5" class="text-center py-4 text-slate-400">Belum ada pendaftaran hari ini</td></tr>';
+        } catch(e) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-red-500">Gagal memuat data</td></tr>'; }
+    }
+    document.querySelector('button[type="submit"]')?.addEventListener('click', async function(e) {
+        e.preventDefault();
+        const nama = document.querySelector('input[placeholder*="nama lengkap"]')?.value || '';
+        const nik = document.querySelector('input[placeholder*="16 digit"]')?.value || '';
+        const tglLahir = document.querySelector('input[type="date"]')?.value || '';
+        const jk = document.querySelectorAll('select')[0]?.value || '';
+        const poli = document.querySelectorAll('select')[1]?.value || '';
+        const alamat = document.querySelector('textarea')?.value || '';
+        try {
+            const res = await fetch('/api/patients', { method:'POST', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify({ full_name: nama, nik, date_of_birth: tglLahir || null, gender: jk, address: alamat, poli_tujuan: poli }) });
+            const json = await res.json();
+            if (res.ok) {
+                const patientId = json.data;
+                await fetch('/api/queues', { method:'POST', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify({ patient_id: patientId, poli: poli, status: 'waiting' }) });
+                alert('Pasien berhasil didaftarkan');
+                window.location.reload();
+            } else {
+                alert(json.error || 'Gagal mendaftarkan');
+            }
+        } catch(e) { alert('Network error'); }
+    });
+});
+</script>
 <?= $this->endSection() ?>

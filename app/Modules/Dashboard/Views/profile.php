@@ -155,4 +155,62 @@
     </div>
   </div>
 </section>
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        const res = await fetch('/api/users/me');
+        const json = await res.json();
+        const u = json.data || json.user || json;
+        if (u) {
+            const nama = u.name || u.nama || u.username || '-';
+            const role = u.role || '-';
+            const email = u.email || '-';
+            const phone = u.phone || u.telp || u.telepon || '-';
+            const detailGrid = document.querySelector('#overview .grid');
+            if (detailGrid) {
+                const cols = detailGrid.querySelectorAll('[class*="col-span-2"]');
+                cols.forEach(el => {
+                    const label = el.previousElementSibling?.textContent || '';
+                    if (label.includes('Nama Lengkap')) el.textContent = nama;
+                    if (label.includes('Email')) el.textContent = email;
+                    if (label.includes('Telepon')) el.textContent = phone;
+                });
+            }
+            const editForm = document.querySelector('#edit-profile form');
+            if (editForm) {
+                const inputs = editForm.querySelectorAll('input');
+                inputs.forEach(inp => {
+                    if (inp.type === 'text' && !inp.closest('#change-password')) inp.value = nama;
+                    if (inp.type === 'email') inp.value = email;
+                });
+            }
+        }
+    } catch(e) {}
+    document.querySelector('#edit-profile form')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const data = {
+            name: this.querySelector('input[type="text"]')?.value || '',
+            email: this.querySelector('input[type="email"]')?.value || '',
+            phone: this.querySelector('input[placeholder*="812"]')?.value || ''
+        };
+        try {
+            const res = await fetch('/api/users/me', { method:'POST', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify(data) });
+            const json = await res.json();
+            alert(json.message || 'Profil berhasil diperbarui');
+        } catch(e) { alert('Gagal memperbarui profil'); }
+    });
+    document.querySelector('#change-password form')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const inputs = this.querySelectorAll('input[type="password"]');
+        const data = { password_lama: inputs[0]?.value || '', password_baru: inputs[1]?.value || '', password_konfirmasi: inputs[2]?.value || '' };
+        if (data.password_baru !== data.password_konfirmasi) return alert('Password baru tidak cocok');
+        try {
+            const res = await fetch('/api/users/me', { method:'POST', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify(data) });
+            const json = await res.json();
+            alert(json.message || 'Password berhasil diubah');
+            this.reset();
+        } catch(e) { alert('Gagal mengubah password'); }
+    });
+});
+</script>
 <?= $this->endSection() ?>

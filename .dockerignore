@@ -1,0 +1,9 @@
+ambil-backend
+node_modules
+.git
+vendor
+builds
+.env
+.env.example
+docs
+tailwindcss

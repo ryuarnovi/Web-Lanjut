@@ -112,4 +112,32 @@
     </div>
   </div>
 </section>
+<script>
+const itemList = document.getElementById('item-list');
+const btnTambah = document.querySelector('button.btn-outline-secondary.border-dashed');
+btnTambah?.addEventListener('click', function() {
+    const template = itemList.querySelector('.grid').cloneNode(true);
+    template.querySelectorAll('input').forEach(i => i.value = '');
+    template.querySelector('input[type="number"]').value = 1;
+    itemList.appendChild(template);
+});
+itemList?.addEventListener('click', function(e) {
+    const btn = e.target.closest('.bg-red-100');
+    if (btn && itemList.querySelectorAll('.grid').length > 1) btn.closest('.grid').remove();
+});
+document.querySelector('button.btn-primary.px-8')?.addEventListener('click', async function() {
+    const items = [];
+    itemList.querySelectorAll('.grid').forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        items.push({ nama: inputs[0]?.value || '', qty: parseInt(inputs[1]?.value || 1), harga: parseInt(inputs[2]?.value || 0) });
+    });
+    const total = items.reduce((s, i) => s + i.qty * i.harga, 0);
+    try {
+        const res = await fetch('/api/payments', { method:'POST', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify({ items, total_bayar: total }) });
+        const json = await res.json();
+        alert(json.message || (res.ok ? 'Tagihan berhasil dibuat' : 'Gagal membuat tagihan'));
+        if (res.ok) window.location.href = '<?= base_url("kasir/data") ?>';
+    } catch(e) { alert('Network error'); }
+});
+</script>
 <?= $this->endSection() ?>
