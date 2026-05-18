@@ -1,5 +1,5 @@
 <!-- ======= Footer Admin ======= -->
-<footer class="admin-footer bg-on-bg text-white">
+<footer class="admin-footer" style="background:#021b3b;color:rgba(255,255,255,0.5)">
     <div class="max-w-full px-8 py-10">
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-10 pb-8 border-b border-white/10">

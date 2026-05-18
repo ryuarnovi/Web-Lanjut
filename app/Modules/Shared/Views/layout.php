@@ -26,9 +26,10 @@ if(uri_string()!=""){
   <link href="<?= base_url()?>assets/css/app.css" rel="stylesheet">
 
   <style>
-    /* Pastikan sidebar & dropdown benar di semua layar */
     .admin-sidebar { left: -280px; }
     body.sidebar-open .admin-sidebar { left: 0; }
+    .admin-main { padding-bottom: 80px; }
+    .admin-footer { position: relative; z-index: 1; clear: both; }
   </style>
 </head>
 
