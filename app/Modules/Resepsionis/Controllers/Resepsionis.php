@@ -252,6 +252,7 @@ class Resepsionis extends BaseController
             $params[] = $userID;
         }
 
+        $sql .= " ORDER BY q.id ASC";
         $query = $this->db->query($sql, $params);
         return $this->response->setJSON(['data' => $query->getResultArray()]);
     }

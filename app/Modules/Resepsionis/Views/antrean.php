@@ -211,16 +211,17 @@ async function loadQueueTable() {
             }
         });
 
-        // Update counter cards
-        const called = list.filter(q => q.status === 'called' && q.loket);
-        const waiting = list.filter(q => q.status === 'waiting');
-        const cardTitles = document.querySelectorAll('.rounded-2xl.bg-klinik-primary h1, .rounded-2xl.bg-green-500 h1, .rounded-2xl.bg-cyan-500 h1');
+        // Update counter cards — only if called/waiting queues exist, keep hardcoded fallback
+        const cardTitles = document.querySelectorAll('h1.text-6xl.font-bold.mb-2');
         if (cardTitles.length >= 3) {
+            const waiting = list.filter(q => q.status === 'waiting');
+            const called = list.filter(q => q.status === 'called' && q.loket);
             const lokets = ['Loket 1', 'Loket 2', 'Loket 3'];
             for (let i = 0; i < 3; i++) {
                 const qCalled = called.find(q => q.loket === lokets[i]);
                 const qWaiting = waiting[i];
-                cardTitles[i].textContent = qCalled ? qCalled.queue_number : (qWaiting ? qWaiting.queue_number : '—');
+                const next = qCalled || qWaiting;
+                if (next) cardTitles[i].textContent = next.queue_number;
             }
         }
 
