@@ -45,38 +45,38 @@
         <!-- Tab: Informasi Klinik -->
         <div id="umum" class="tw-tab-content active">
           <h5 class="text-xl font-bold text-klinik-dark mb-4 border-b border-slate-100 pb-2">Informasi Umum Klinik</h5>
-          <form class="space-y-5">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label class="form-label">Nama Klinik</label>
-                <input type="text" class="form-input" value="KlinikOS Medical Center">
+            <form class="space-y-5" id="formInfoKlinik">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label class="form-label">Nama Klinik</label>
+                  <input type="text" class="form-input" id="namaKlinik" value="">
+                </div>
+                <div>
+                  <label class="form-label">Kode Fasilitas Kesehatan (Faskes)</label>
+                  <input type="text" class="form-input" id="kodeFaskes" value="">
+                </div>
               </div>
-              <div>
-                <label class="form-label">Kode Fasilitas Kesehatan (Faskes)</label>
-                <input type="text" class="form-input" value="FKS-009123">
-              </div>
-            </div>
 
-            <div>
-              <label class="form-label">Alamat Lengkap</label>
-              <textarea class="form-textarea h-24">Jl. Jend. Sudirman No. 123, Kompleks Kesehatan Terpadu, Jakarta Selatan, 12190</textarea>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label class="form-label">Nomor Telepon Darurat (IGD)</label>
-                <input type="text" class="form-input" value="(021) 555-1234">
+                <label class="form-label">Alamat Lengkap</label>
+                <textarea class="form-textarea h-24" id="alamatKlinik"></textarea>
               </div>
-              <div>
-                <label class="form-label">Email Operasional</label>
-                <input type="email" class="form-input" value="info@klinikos.co.id">
-              </div>
-            </div>
 
-            <div class="pt-4 flex justify-end">
-              <button type="button" class="btn btn-primary shadow-sm">Simpan Informasi</button>
-            </div>
-          </form>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label class="form-label">Nomor Telepon Darurat (IGD)</label>
+                  <input type="text" class="form-input" id="teleponKlinik" value="">
+                </div>
+                <div>
+                  <label class="form-label">Email Operasional</label>
+                  <input type="email" class="form-input" id="emailKlinik" value="">
+                </div>
+              </div>
+
+              <div class="pt-4 flex justify-end">
+                <button type="button" class="btn btn-primary shadow-sm" id="btnSimpanInfo">Simpan Informasi</button>
+              </div>
+            </form>
         </div>
 
         <!-- Tab: Jam Operasional -->
@@ -97,9 +97,9 @@
                 </div>
               </div>
               <div class="flex items-center gap-2">
-                <input type="time" class="form-input py-1.5 w-auto" value="08:00">
+                <input type="time" class="form-input py-1.5 w-auto jam-buka" value="08:00">
                 <span class="text-slate-400">-</span>
-                <input type="time" class="form-input py-1.5 w-auto" value="21:00">
+                <input type="time" class="form-input py-1.5 w-auto jam-tutup" value="21:00">
               </div>
             </div>
             
@@ -238,4 +238,43 @@
   </div>
 
 </section>
+<script>
+async function loadSettings() {
+    try {
+        const res = await fetch('/api/settings');
+        const json = await res.json();
+        const s = json.data || {};
+        if (s.nama_klinik) document.getElementById('namaKlinik').value = s.nama_klinik;
+        if (s.kode_faskes) document.getElementById('kodeFaskes').value = s.kode_faskes;
+        if (s.alamat) document.getElementById('alamatKlinik').value = s.alamat;
+        if (s.telepon) document.getElementById('teleponKlinik').value = s.telepon;
+        if (s.email) document.getElementById('emailKlinik').value = s.email;
+        const jamInputs = document.querySelectorAll('.jam-buka, .jam-tutup');
+        if (s.jam_buka_senin_jumat && jamInputs.length >= 2) {
+            const parts = s.jam_buka_senin_jumat.split(' - ');
+            if (parts[0]) jamInputs[0].value = parts[0];
+            if (parts[1]) jamInputs[1].value = parts[1];
+        }
+        if (s.midtrans_client_key) document.querySelector('input[value*="SB-Mid-client"]').value = s.midtrans_client_key;
+        if (s.midtrans_server_key) document.querySelector('input[value*="SB-Mid-server"]').value = s.midtrans_server_key;
+    } catch(e) {}
+}
+
+document.getElementById('btnSimpanInfo')?.addEventListener('click', async function() {
+    const data = {
+        nama_klinik: document.getElementById('namaKlinik').value,
+        kode_faskes: document.getElementById('kodeFaskes').value,
+        alamat: document.getElementById('alamatKlinik').value,
+        telepon: document.getElementById('teleponKlinik').value,
+        email: document.getElementById('emailKlinik').value,
+    };
+    try {
+        const res = await fetch('/api/settings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+        const json = await res.json();
+        alert(json.message || 'Disimpan');
+    } catch(e) { alert('Gagal menyimpan'); }
+});
+
+document.addEventListener('DOMContentLoaded', loadSettings);
+</script>
 <?= $this->endSection() ?>

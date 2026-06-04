@@ -103,16 +103,45 @@
   </div>
 </section>
 <script>
+async function loadDrugOptions() {
+    try {
+        const res = await fetch('/api/drugs');
+        const json = await res.json();
+        const drugs = json.data || [];
+        const kategoriSet = new Set();
+        const bentukSet = new Set();
+        drugs.forEach(d => {
+            if (d.kategori_obat) kategoriSet.add(d.kategori_obat);
+            if (d.bentuk_obat) bentukSet.add(d.bentuk_obat);
+        });
+        const selects = document.querySelectorAll('select');
+        if (selects[0] && kategoriSet.size) {
+            selects[0].innerHTML = '<option selected>Pilih Golongan</option>';
+            kategoriSet.forEach(k => selects[0].innerHTML += '<option>' + k + '</option>');
+        }
+        if (selects[1] && bentukSet.size) {
+            selects[1].innerHTML = '<option selected>Pilih Sediaan</option>';
+            bentukSet.forEach(b => selects[1].innerHTML += '<option>' + b + '</option>');
+        }
+    } catch(e) {}
+}
+loadDrugOptions();
+
 document.querySelector('.btn-primary.px-8')?.addEventListener('click', async function() {
-    const allInputs = document.querySelectorAll('input:not([readonly])');
+    const sku = document.querySelector('input[readonly]')?.value || 'OBT-' + Date.now();
+    const nama = document.querySelector('input[placeholder*="nama obat"]')?.value || '';
     const allSelects = document.querySelectorAll('select');
+    const kategori = allSelects[0]?.value || '';
+    const bentuk = allSelects[1]?.value || '';
+    const allInputs = document.querySelectorAll('input:not([readonly]):not([type="date"]):not([placeholder*="nama"])');
     const data = {
-        nama_obat: document.querySelector('input[placeholder*="nama obat"]')?.value || '',
-        kategori: allSelects[0]?.value || '',
-        bentuk_sediaan: allSelects[1]?.value || '',
-        harga_beli: parseInt(allInputs[0]?.value || 0),
-        harga_jual_eceran: parseInt(allInputs[1]?.value || 0),
-        stok_obat: parseInt(allInputs[2]?.value || 0),
+        sku: sku,
+        name: nama,
+        category: kategori,
+        shape: bentuk,
+        buy_price: parseInt(allInputs[0]?.value || 0),
+        sell_price: parseInt(allInputs[1]?.value || 0),
+        stock: parseInt(allInputs[2]?.value || 0),
         min_stock: parseInt(allInputs[3]?.value || 0),
         expiry_date: document.querySelector('input[type="date"]')?.value || ''
     };

@@ -27,8 +27,9 @@
               <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
               </span>
-              <input type="text" class="form-input pl-10" placeholder="Masukkan nama lengkap sesuai identitas">
+              <input type="text" class="form-input pl-10" id="patientNameInput" placeholder="Ketik nama pasien untuk cari atau isi baru" autocomplete="off">
             </div>
+            <div id="patientSearchDropdown" class="relative"></div>
           </div>
 
           <div>
@@ -52,11 +53,26 @@
 
           <div>
             <label class="form-label">Poli Tujuan</label>
-            <select class="form-select">
+            <select class="form-select" id="poliSelect">
               <option selected>Pilih Poli...</option>
-              <option value="Umum">Poli Umum</option>
-              <option value="Gigi">Poli Gigi</option>
-              <option value="Anak">Poli Anak</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label">Dokter Tujuan</label>
+            <select class="form-select" id="doctorSelect">
+              <option selected>Pilih Dokter...</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label">Jenis Kunjungan</label>
+            <select class="form-select" id="visitTypeSelect">
+              <option value="rawat_jalan" selected>Rawat Jalan</option>
+              <option value="rawat_inap">Rawat Inap</option>
+              <option value="gawat_darurat">Gawat Darurat (IGD)</option>
+              <option value="kontrol">Kontrol / Check-up</option>
+              <option value="rujukan">Rujukan</option>
             </select>
           </div>
 
@@ -89,35 +105,13 @@
               <th>Nomor</th>
               <th>Pasien</th>
               <th>Poli</th>
+              <th>Kunjungan</th>
               <th>Jam</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
-            <tr>
-              <td class="font-bold text-klinik-primary text-lg">UM-045</td>
-              <td>
-                <div class="flex flex-col">
-                  <span class="font-bold text-slate-800">Ahmad Subandrio</span>
-                  <span class="text-xs text-slate-500">NIK: 33010214****</span>
-                </div>
-              </td>
-              <td><span class="badge bg-blue-50 text-blue-600">Poli Umum</span></td>
-              <td class="text-slate-500 text-sm font-medium">09:12 WIB</td>
-              <td><span class="badge badge-warning">Menunggu</span></td>
-            </tr>
-            <tr>
-              <td class="font-bold text-klinik-primary text-lg">AN-012</td>
-              <td>
-                <div class="flex flex-col">
-                  <span class="font-bold text-slate-800">Zahra Putri</span>
-                  <span class="text-xs text-slate-500">NIK: 33010218****</span>
-                </div>
-              </td>
-              <td><span class="badge bg-purple-50 text-purple-600">Poli Anak</span></td>
-              <td class="text-slate-500 text-sm font-medium">09:05 WIB</td>
-              <td><span class="badge badge-success">Dilayani</span></td>
-            </tr>
+            <tr><td colspan="6" class="text-center py-4 text-slate-400">Memuat data...</td></tr>
           </tbody>
         </table>
       </div>
@@ -183,46 +177,167 @@
   </div>
 </section>
 <script>
-document.addEventListener('DOMContentLoaded', async function() {
-    const tbody = document.querySelector('.tw-table tbody');
-    if (tbody) {
-        try {
-            const res = await fetch('/api/patients');
-            const json = await res.json();
-            const list = json.data || [];
-            tbody.innerHTML = list.length ? list.slice(0,10).map(p => {
-                const poliLabel = 'Umum';
-                const poliColor = 'bg-blue-50 text-blue-600';
-                return `<tr>
-                    <td class="font-bold text-klinik-primary text-lg">${p.id || '-'}</td>
-                    <td><div class="flex flex-col"><span class="font-bold text-slate-800">${p.full_name || '-'}</span><span class="text-xs text-slate-500">NIK: ${(p.nik || '').slice(0,8)}****</span></div></td>
-                    <td><span class="badge ${poliColor}">${poliLabel}</span></td>
-                    <td class="text-slate-500 text-sm font-medium">${p.created_at ? p.created_at.slice(11,16) : '-'} WIB</td>
-                    <td><span class="badge badge-warning">Menunggu</span></td>
-                </tr>`;
-            }).join('') : '<tr><td colspan="5" class="text-center py-4 text-slate-400">Belum ada pendaftaran hari ini</td></tr>';
-        } catch(e) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-red-500">Gagal memuat data</td></tr>'; }
+let DOCTORS = [];
+let selectedPatientId = null;
+let patientSearchTimeout = null;
+
+async function searchPatients() {
+    const input = document.getElementById('patientNameInput');
+    const q = input.value.trim().toLowerCase();
+    const dropdown = document.getElementById('patientSearchDropdown');
+    if (q.length < 2) { dropdown.innerHTML = ''; return; }
+    try {
+        const res = await fetch('/api/patients?limit=20');
+        const json = await res.json();
+        const all = json.data || [];
+        const matches = all.filter(p => (p.full_name || '').toLowerCase().includes(q) || (p.nik || '').includes(q));
+        if (matches.length) {
+            dropdown.innerHTML = '<div class="border border-slate-200 rounded-lg bg-white shadow-lg mt-1 max-h-48 overflow-y-auto">' +
+                matches.map(p => `<div class="px-3 py-2 cursor-pointer hover:bg-klinik-light border-b border-slate-100 text-sm flex justify-between" onclick="pilihPasien(${p.id},'${(p.full_name||'').replace(/'/g,"\\'")}','${(p.nik||'').replace(/'/g,"\\'")}')">
+                    <span class="font-medium">${p.full_name}</span>
+                    <span class="text-slate-400 text-xs">${p.nik} ${p.patient_code ? '('+p.patient_code+')' : ''}</span>
+                </div>`).join('') + '</div>';
+        } else { dropdown.innerHTML = '<div class="text-xs text-slate-400 mt-1">Pasien tidak ditemukan. Isi form untuk daftarkan baru.</div>'; }
+    } catch(e) { dropdown.innerHTML = ''; }
+}
+
+function pilihPasien(id, nama, nik) {
+    selectedPatientId = id;
+    document.getElementById('patientNameInput').value = nama + ' (' + nik + ')';
+    document.getElementById('patientSearchDropdown').innerHTML = '<div class="text-xs text-green-600 mt-1 font-semibold">Pasien ditemukan! Akan mendaftarkan pasien yang sudah ada.</div>';
+    document.querySelector('input[placeholder*="16 digit"]').value = nik;
+}
+
+async function loadDoctors() {
+    try {
+        const res = await fetch('/api/doctors');
+        const json = await res.json();
+        DOCTORS = json.data || [];
+        const poliSet = new Set();
+        DOCTORS.forEach(d => { if (d.specialization) poliSet.add(d.specialization); });
+        const poliSelect = document.getElementById('poliSelect');
+        poliSelect.innerHTML = '<option selected>Pilih Poli...</option><option value="Semua Poli">Semua Poli</option>';
+        poliSet.forEach(p => { poliSelect.innerHTML += `<option value="${p}">${p}</option>`; });
+    } catch(e) { DOCTORS = []; }
+}
+
+async function loadPatientTable() {
+    try {
+        const res = await fetch('/api/queues');
+        const json = await res.json();
+        const list = json.data || [];
+        
+        // Filter only today's queues
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const todayList = list.filter(q => q.queue_date === todayStr || (q.created_at && q.created_at.slice(0, 10) === todayStr));
+        
+        paginateTable('.tw-table', todayList, 5, q => {
+            const poliLabel = q.poli || 'Umum';
+            const statusMap = { 'waiting': 'warning', 'called': 'info', 'in_progress': 'primary', 'completed': 'success', 'cancelled': 'danger' };
+            const badgeClass = statusMap[q.status] || 'secondary';
+            const statusLabels = { 'waiting': 'Menunggu', 'called': 'Dipanggil', 'in_progress': 'Diperiksa', 'completed': 'Selesai', 'cancelled': 'Batal' };
+            const label = statusLabels[q.status] || q.status;
+            const visitLabels = { 'rawat_jalan': 'Rawat Jalan', 'rawat_inap': 'Rawat Inap', 'gawat_darurat': 'IGD', 'kontrol': 'Kontrol', 'rujukan': 'Rujukan' };
+            const visitLabel = visitLabels[q.visit_type] || q.visit_type || 'Rawat Jalan';
+            
+            return `<tr>
+                <td class="font-bold text-klinik-primary text-lg">${q.queue_number || q.id || '-'}</td>
+                <td><div class="flex flex-col"><span class="font-bold text-slate-800">${q.patient_name || '-'}</span></div></td>
+                <td><span class="badge bg-blue-50 text-blue-600">${poliLabel}</span></td>
+                <td><span class="badge bg-purple-50 text-purple-600 border border-purple-200">${visitLabel}</span></td>
+                <td class="text-slate-500 text-sm font-medium">${q.created_at ? q.created_at.slice(11, 16) : '-'} WIB</td>
+                <td><span class="badge badge-${badgeClass}">${label}</span></td>
+            </tr>`;
+        });
+    } catch(e) {
+        const tbody = document.querySelector('.tw-table tbody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-500">Gagal memuat data</td></tr>';
     }
+}
+
+function filterDoctorsByPoli(poli) {
+    const sel = document.getElementById('doctorSelect');
+    sel.innerHTML = '<option value="">Pilih Dokter...</option>';
+    if (!poli || poli === 'Pilih Poli...' || poli === 'Semua Poli') {
+        DOCTORS.forEach(d => {
+            sel.innerHTML += `<option value="${d.id}">${d.full_name}${d.specialization ? ' ('+d.specialization+')' : ''}</option>`;
+        });
+        return;
+    }
+    const filtered = DOCTORS.filter(d => (d.specialization || '').toLowerCase() === poli.toLowerCase());
+    if (!filtered.length) {
+        sel.innerHTML += '<option disabled>Tidak ada dokter untuk poli ini</option>';
+        return;
+    }
+    filtered.forEach(d => {
+        sel.innerHTML += `<option value="${d.id}">${d.full_name}</option>`;
+    });
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadDoctors();
+    document.getElementById('poliSelect').value = 'Semua Poli';
+    filterDoctorsByPoli('Semua Poli');
+    loadPatientTable();
+    setInterval(loadPatientTable, 10000);
+    document.getElementById('patientNameInput').addEventListener('keyup', function() {
+        clearTimeout(patientSearchTimeout);
+        selectedPatientId = null;
+        patientSearchTimeout = setTimeout(searchPatients, 300);
+    });
+    document.getElementById('poliSelect').addEventListener('change', function() {
+        filterDoctorsByPoli(this.value);
+    });
     document.querySelector('button[type="submit"]')?.addEventListener('click', async function(e) {
         e.preventDefault();
-        const nama = document.querySelector('input[placeholder*="nama lengkap"]')?.value || '';
+        const nama = document.getElementById('patientNameInput')?.value?.split(' (')[0] || '';
         const nik = document.querySelector('input[placeholder*="16 digit"]')?.value || '';
         const tglLahir = document.querySelector('input[type="date"]')?.value || '';
         const jk = document.querySelectorAll('select')[0]?.value || '';
-        const poli = document.querySelectorAll('select')[1]?.value || '';
+        const poli = document.getElementById('poliSelect').value || '';
+        const doctorId = document.getElementById('doctorSelect').value || '';
         const alamat = document.querySelector('textarea')?.value || '';
+        
+        if (!nama || !nik || !doctorId) {
+            return showToast('Harap isi nama, NIK, dan dokter tujuan', 'warning');
+        }
+        if (!poli || poli === 'Semua Poli' || poli === 'Pilih Poli...') {
+            return showToast('Harap pilih poli tujuan', 'warning');
+        }
         try {
-            const res = await fetch('/api/patients', { method:'POST', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify({ full_name: nama, nik, date_of_birth: tglLahir || null, gender: jk, address: alamat, poli_tujuan: poli }) });
-            const json = await res.json();
-            if (res.ok) {
-                const patientId = json.data;
-                await fetch('/api/queues', { method:'POST', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify({ patient_id: patientId, poli: poli, status: 'waiting' }) });
-                alert('Pasien berhasil didaftarkan');
-                window.location.reload();
-            } else {
-                alert(json.error || 'Gagal mendaftarkan');
+            let patientId = selectedPatientId;
+            if (!patientId) {
+                const res = await fetch('/api/patients', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, 
+                    body: JSON.stringify({ full_name: nama, nik, date_of_birth: tglLahir || null, gender: jk, address: alamat, poli_tujuan: poli }) 
+                });
+                const json = await res.json();
+                if (!res.ok) { 
+                    showToast(json.error || 'Gagal membuat pasien', 'error'); 
+                    return; 
+                }
+                patientId = json.data;
             }
-        } catch(e) { alert('Network error'); }
+            const visitType = document.getElementById('visitTypeSelect').value || 'rawat_jalan';
+            const qRes = await fetch('/api/queues', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, 
+                body: JSON.stringify({ patient_id: patientId, poli: poli, doctor_id: parseInt(doctorId), status: 'waiting', visit_type: visitType }) 
+            });
+            const qJson = await qRes.json();
+            if (!qRes.ok) {
+                showToast(qJson.error || 'Gagal membuat antrean', 'error');
+                return;
+            }
+            showToast('Pasien berhasil didaftarkan ke antrean!', 'success');
+            loadPatientTable();
+            document.querySelector('form').reset();
+            selectedPatientId = null;
+            document.getElementById('patientSearchDropdown').innerHTML = '';
+        } catch(e) { 
+            showToast('Terjadi kesalahan jaringan', 'error'); 
+        }
     });
 });
 </script>

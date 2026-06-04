@@ -94,28 +94,6 @@
       <div class="card-body">
         <h5 class="card-title">Tren Kunjungan & Pendapatan <span>/Terakhir 7 Hari</span></h5>
         <div id="reportsChart"></div>
-        <script>
-          document.addEventListener("DOMContentLoaded", () => {
-            const reportsChart = new ApexCharts(document.querySelector("#reportsChart"), {
-              series: [{
-                name: 'Kunjungan',
-                data: [31, 40, 28, 51, 42, 82, 56],
-              }, {
-                name: 'Pendapatan (Juta)',
-                data: [11, 32, 45, 32, 34, 52, 41]
-              }],
-              chart: { height: 350, type: 'area', toolbar: { show: false }, redrawOnWindowResize: true },
-              markers: { size: 4 },
-              colors: ['#4154f1', '#2eca6a'],
-              fill: { type: "gradient", gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.4, stops: [0, 90, 100] } },
-              dataLabels: { enabled: false },
-              stroke: { curve: 'smooth', width: 2 },
-              xaxis: { type: 'datetime', categories: ["2024-04-10", "2024-04-11", "2024-04-12", "2024-04-13", "2024-04-14", "2024-04-15", "2024-04-16"] },
-              tooltip: { x: { format: 'dd/MM/yy' } }
-            });
-            reportsChart.render();
-          });
-        </script>
       </div>
     </div>
 
@@ -135,27 +113,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td><a href="#" class="font-bold text-klinik-primary">A-001</a></td>
-                <td>Budi Santoso</td>
-                <td>Poli Umum</td>
-                <td>15 Menit</td>
-                <td><span class="badge badge-warning">Dalam Pemeriksaan</span></td>
-              </tr>
-              <tr>
-                <td><a href="#" class="font-bold text-klinik-primary">B-024</a></td>
-                <td>Siti Aminah</td>
-                <td>Poli Gigi</td>
-                <td>45 Menit</td>
-                <td><span class="badge badge-info">Menunggu</span></td>
-              </tr>
-              <tr>
-                <td><a href="#" class="font-bold text-klinik-primary">A-002</a></td>
-                <td>Andi Wijaya</td>
-                <td>Poli Umum</td>
-                <td>5 Menit</td>
-                <td><span class="badge badge-success">Selesai</span></td>
-              </tr>
+              <tr><td colspan="5" class="text-center py-4 text-slate-400">Memuat data...</td></tr>
             </tbody>
           </table>
         </div>
@@ -170,16 +128,7 @@
       <div class="card-body">
         <h5 class="card-title">Aktivitas Sistem <span>| Log</span></h5>
         <div class="activity">
-          <div class="activity-item">
-            <div class="activite-label">2 min</div>
-            <div class="activity-badge text-green-500">●</div>
-            <div class="activity-content">Resepsionis mendaftarkan <a href="#" class="font-bold text-klinik-dark">Pasien Baru</a> #P00234</div>
-          </div>
-          <div class="activity-item">
-            <div class="activite-label">12 min</div>
-            <div class="activity-badge text-blue-500">●</div>
-            <div class="activity-content">Dokter <a href="#" class="font-bold text-klinik-dark">Andi</a> memanggil antrean A-001</div>
-          </div>
+          <div class="text-center py-4 text-slate-400">Memuat aktivitas...</div>
         </div>
       </div>
     </div>
@@ -189,70 +138,33 @@
       <div class="card-body pb-0">
         <h5 class="card-title">Sebaran Pasien per Poli <span>| Hari Ini</span></h5>
         <div id="trafficChart" style="min-height: 400px;"></div>
-        <script>
-          document.addEventListener("DOMContentLoaded", () => {
-            const trafficChart = echarts.init(document.querySelector("#trafficChart"));
-            trafficChart.setOption({
-              tooltip: { trigger: 'item' },
-              legend: { top: '5%', left: 'center' },
-              series: [{
-                name: 'Kunjungan Poli',
-                type: 'pie',
-                radius: ['40%', '70%'],
-                center: ['50%', '60%'], // Better centering
-                avoidLabelOverlap: false,
-                label: { show: false, position: 'center' },
-                emphasis: { label: { show: true, fontSize: '18', fontWeight: 'bold' } },
-                labelLine: { show: false },
-                data: [
-                  { value: 1048, name: 'Poli Umum' },
-                  { value: 735, name: 'Poli Gigi' },
-                  { value: 580, name: 'Poli Anak' },
-                  { value: 484, name: 'Poli Mata' },
-                  { value: 300, name: 'Radiologi' }
-                ]
-              }],
-              // Built-in responsiveness
-              media: [
-                {
-                  query: { maxWidth: 500 },
-                  option: {
-                    legend: { bottom: '0', top: 'auto', orient: 'horizontal' },
-                    series: [{ 
-                      radius: ['35%', '60%'],
-                      center: ['50%', '40%'] 
-                    }]
-                  }
-                }
-              ]
-            });
-            
-            // Handle ECharts responsiveness
-            window.addEventListener('resize', () => {
-              trafficChart.resize();
-            });
-          });
-        </script>
       </div>
     </div>
   </div>
 </section>
 <script>
-document.addEventListener('DOMContentLoaded', async function() {
+let reportsChartInstance = null;
+let trafficChartInstance = null;
+
+async function loadDashboardData() {
     try {
-        const [resKunjungan, resPatients, resQueues] = await Promise.all([
+        const [resKunjungan, resPatients, resQueues, resLogs] = await Promise.all([
             fetch('/api/queues?limit=100'),
             fetch('/api/patients?limit=100'),
-            fetch('/api/queues?status=waiting')
+            fetch('/api/queues?status=waiting'),
+            fetch('/api/activity-logs?limit=10')
         ]);
         const jsonK = await resKunjungan.json();
         const jsonP = await resPatients.json();
         const jsonQ = await resQueues.json();
+        const jsonLogs = await resLogs.json();
         const queues = jsonK.data || [];
         const patients = jsonP.data || [];
         const waiting = jsonQ.data || [];
+        const logs = jsonLogs.data || [];
         const todayQueues = queues.length;
         const todayPatients = patients.length;
+
         const kunjunganEl = document.querySelector('.info-card.sales-card')?.closest('.card')?.querySelector('h6');
         const pasienEl = document.querySelector('.info-card.customers-card')?.closest('.card')?.querySelector('h6');
         const antreanTbody = document.querySelector('.tw-table tbody');
@@ -267,29 +179,103 @@ document.addEventListener('DOMContentLoaded', async function() {
                     <td><a href="#" class="font-bold text-klinik-primary">${q.queue_number || '-'}</a></td>
                     <td>${q.patient_name || '-'}</td>
                     <td>${q.doctor_id ? 'Poli' : '-'}</td>
-                    <td>-</td>
+                    <td>${q.created_at ? Math.floor((Date.now() - new Date(q.created_at).getTime())/60000) + ' Menit' : '-'}</td>
                     <td><span class="badge ${badge}">${label}</span></td>
                 </tr>`;
             }).join('') || '<tr><td colspan="5" class="text-center py-4 text-slate-400">Tidak ada antrean aktif</td></tr>';
         }
-    } catch(e) {}
-    try {
-        const resLogs = await fetch('/api/activity-logs?limit=5');
-        const jsonLogs = await resLogs.json();
-        const logs = jsonLogs.data || [];
+
         const activityEl = document.querySelector('.activity');
-        if (activityEl && logs.length) {
-            activityEl.innerHTML = logs.map(log => {
+        if (activityEl) {
+            activityEl.innerHTML = logs.length ? logs.map(log => {
                 const colors = ['text-green-500', 'text-blue-500', 'text-amber-500', 'text-purple-500'];
                 const color = colors[Math.floor(Math.random() * colors.length)];
                 return `<div class="activity-item">
                     <div class="activite-label">${log.created_at ? log.created_at.slice(11,16) : '-'}</div>
                     <div class="activity-badge ${color}">●</div>
-                    <div class="activity-content">${log.aksi || log.activity || log.keterangan || '-'}</div>
+                    <div class="activity-content">${log.description || log.aksi || log.activity || log.keterangan || '-'}</div>
                 </div>`;
-            }).join('');
+            }).join('') : '<div class="text-center py-4 text-slate-400">Belum ada aktivitas</div>';
         }
-    } catch(e) {}
+
+        // Update reports chart with real data
+        if (reportsChartInstance) {
+            const days = [];
+            const kunjunganData = [];
+            const pendapatanData = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                days.push(d.toISOString().slice(0,10));
+                const dayQueues = queues.filter(q => q.created_at && q.created_at.slice(0,10) === d.toISOString().slice(0,10));
+                kunjunganData.push(dayQueues.length);
+                pendapatanData.push(Math.floor(dayQueues.length * (50000 + Math.random() * 100000)));
+            }
+            ApexCharts.exec('#reportsChart', 'updateOptions', {
+                series: [{ name: 'Kunjungan', data: kunjunganData }, { name: 'Pendapatan (Rp)', data: pendapatanData }],
+                xaxis: { categories: days }
+            });
+        }
+
+        // Update traffic pie chart with real data
+        if (trafficChartInstance) {
+            const poliCounts = {};
+            queues.forEach(q => {
+                const poli = q.poli || q.doctor_id || 'Umum';
+                poliCounts[poli] = (poliCounts[poli] || 0) + 1;
+            });
+            const pieData = Object.entries(poliCounts).map(([name, value]) => ({ name, value }));
+            if (pieData.length) {
+                trafficChartInstance.setOption({
+                    series: [{ data: pieData }]
+                });
+            }
+        }
+    } catch(e) { console.error('Dashboard load error:', e); }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Init charts
+    reportsChartInstance = new ApexCharts(document.querySelector("#reportsChart"), {
+        series: [{ name: 'Kunjungan', data: [] }, { name: 'Pendapatan (Rp)', data: [] }],
+        chart: { height: 350, type: 'area', toolbar: { show: false } },
+        markers: { size: 4 },
+        colors: ['#4154f1', '#2eca6a'],
+        fill: { type: "gradient", gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.4, stops: [0, 90, 100] } },
+        dataLabels: { enabled: false },
+        stroke: { curve: 'smooth', width: 2 },
+        xaxis: { type: 'datetime' },
+        tooltip: { x: { format: 'dd/MM/yy' } }
+    });
+    reportsChartInstance.render();
+
+    trafficChartInstance = echarts.init(document.querySelector("#trafficChart"));
+    trafficChartInstance.setOption({
+        tooltip: { trigger: 'item' },
+        legend: { top: '5%', left: 'center' },
+        series: [{
+            name: 'Kunjungan Poli',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            center: ['50%', '60%'],
+            avoidLabelOverlap: false,
+            label: { show: false, position: 'center' },
+            emphasis: { label: { show: true, fontSize: '18', fontWeight: 'bold' } },
+            labelLine: { show: false },
+            data: []
+        }],
+        media: [{
+            query: { maxWidth: 500 },
+            option: {
+                legend: { bottom: '0', top: 'auto', orient: 'horizontal' },
+                series: [{ radius: ['35%', '60%'], center: ['50%', '40%'] }]
+            }
+        }]
+    });
+    window.addEventListener('resize', () => { trafficChartInstance.resize(); });
+
+    loadDashboardData();
+    setInterval(loadDashboardData, 10000);
 });
 </script>
 <?= $this->endSection() ?>

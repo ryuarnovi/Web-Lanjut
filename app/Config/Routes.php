@@ -45,6 +45,13 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('resep', '\Modules\Apoteker\Controllers\Apoteker::resep');
         $routes->get('stok', '\Modules\Apoteker\Controllers\Apoteker::stok');
         $routes->get('form', '\Modules\Apoteker\Controllers\Apoteker::form');
+        $routes->get('supplier', '\Modules\Apoteker\Controllers\Apoteker::supplier');
+    });
+
+    // Perawat
+    $routes->group('perawat', ['filter' => 'auth:admin,perawat'], function ($routes) {
+        $routes->get('antrean', '\Modules\Perawat\Controllers\Perawat::antrean');
+        $routes->get('periksa', '\Modules\Perawat\Controllers\Perawat::periksa');
     });
 
     // Kasir
@@ -98,6 +105,8 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
 
     // Queues API (Resepsionis)
     $routes->get('queues', '\Modules\Resepsionis\Controllers\Resepsionis::listQueues');
+    $routes->get('doctors', '\Modules\Resepsionis\Controllers\Resepsionis::listDoctors');
+    $routes->get('dokter/list', '\Modules\Resepsionis\Controllers\Resepsionis::listDoctors');
     $routes->get('queues/(:num)', '\Modules\Resepsionis\Controllers\Resepsionis::getQueue/$1');
     $routes->post('queues', '\Modules\Resepsionis\Controllers\Resepsionis::createQueue');
     $routes->put('queues/(:num)', '\Modules\Resepsionis\Controllers\Resepsionis::updateQueue/$1');
@@ -148,6 +157,44 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
     $routes->get('activity-logs/search', '\Modules\Resepsionis\Controllers\Resepsionis::searchActivityLogs');
     $routes->get('activity-logs/(:num)', '\Modules\Resepsionis\Controllers\Resepsionis::getActivityLog/$1');
     $routes->post('activity-logs', '\Modules\Resepsionis\Controllers\Resepsionis::createActivityLog');
+
+    // Perawat API
+    $routes->get('perawat/queues', '\Modules\Perawat\Controllers\Perawat::listQueues');
+    $routes->get('perawat/queues/(:num)', '\Modules\Perawat\Controllers\Perawat::getQueue/$1');
+    $routes->put('perawat/queues/(:num)', '\Modules\Perawat\Controllers\Perawat::updateQueue/$1');
+    $routes->get('perawat/medical-records', '\Modules\Perawat\Controllers\Perawat::listMedicalRecords');
+    $routes->post('perawat/medical-records', '\Modules\Perawat\Controllers\Perawat::createMedicalRecord');
+    $routes->get('perawat/medical-records/(:num)', '\Modules\Perawat\Controllers\Perawat::getMedicalRecord/$1');
+    $routes->put('perawat/medical-records/(:num)', '\Modules\Perawat\Controllers\Perawat::updateMedicalRecord/$1');
+    $routes->get('perawat/lokets', '\Modules\Perawat\Controllers\Perawat::listLokets');
+
+    // Settings API (Dashboard)
+    $routes->get('settings', '\Modules\Dashboard\Controllers\Dashboard::getSettings');
+    $routes->post('settings', '\Modules\Dashboard\Controllers\Dashboard::saveSettings');
+
+    // Dashboard Stats API
+    $routes->get('dashboard/stats', '\Modules\Dashboard\Controllers\Dashboard::getDashboardStats');
+
+    // Lokets API (Resepsionis)
+    $routes->get('lokets', '\Modules\Resepsionis\Controllers\Resepsionis::listLokets');
+    $routes->post('lokets', '\Modules\Resepsionis\Controllers\Resepsionis::createLoket');
+    $routes->put('lokets/(:num)', '\Modules\Resepsionis\Controllers\Resepsionis::updateLoket/$1');
+    $routes->delete('lokets/(:num)', '\Modules\Resepsionis\Controllers\Resepsionis::deleteLoket/$1');
+
+    // Suppliers API (Apoteker)
+    $routes->get('suppliers', '\Modules\Apoteker\Controllers\Apoteker::listSuppliers');
+    $routes->post('suppliers', '\Modules\Apoteker\Controllers\Apoteker::createSupplier');
+    $routes->put('suppliers/(:num)', '\Modules\Apoteker\Controllers\Apoteker::updateSupplier/$1');
+    $routes->delete('suppliers/(:num)', '\Modules\Apoteker\Controllers\Apoteker::deleteSupplier/$1');
+
+    // Stock Transactions API (Apoteker)
+    $routes->get('stock-transactions', '\Modules\Apoteker\Controllers\Apoteker::listStockTransactions');
+    $routes->post('stock-transactions', '\Modules\Apoteker\Controllers\Apoteker::createStockTransaction');
+
+    // Import / Export Drugs API (Apoteker)
+    $routes->post('drugs/import', '\Modules\Apoteker\Controllers\Apoteker::importDrugs');
+    $routes->get('drugs/export', '\Modules\Apoteker\Controllers\Apoteker::exportDrugs');
+    $routes->get('drugs/template', '\Modules\Apoteker\Controllers\Apoteker::downloadTemplate');
 });
 
 $routes->get('general', '\Modules\General\Controllers\General::General');

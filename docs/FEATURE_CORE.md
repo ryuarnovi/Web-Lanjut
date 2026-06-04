@@ -3,14 +3,41 @@
 ## Deskripsi Logic
 Modul sentral atau Global (Core) menangani fitur-fitur administratif seperti autentikasi user (Login/Logout), manajemen sesi, hak akses, visualisasi data statistik harian (Dashboard utama), serta pengaturan operasional *setting* klinik.
 
-## Kekurangan / Yang Perlu Ditambahkan
-- **Autentikasi & Database Users**: Perlu tabel `users` dengan enkripsi *password* menggunakan `password_hash()` bawaan PHP/CI4.
-- **Implementasi Middleware (Filters) di CI4**: Saat ini sistem belum mengamankan jalur *URL*. Fitur Filter CI4 harus mencegah `guest` mengakses halaman dalam, serta membatasi `Kasir` untuk tidak bisa masuk (Bypass URL) ke `/dokter/soap`.
-- **Dinamisasi Grafik Laporan (Charts)**: Widget grafik E-Charts & ApexCharts di Dashboard perlu dihubungkan dengan *query* Ajax atau Data Binding dari database untuk memunculkan tren pasien atau pendapatan yang sesungguhnya.
-- **Penyimpanan Profil & Pengaturan**: Form "Informasi Klinik" dan "Jam Operasional" harus disinkronisasikan ke tabel konfigurasi global (biasanya tabel `settings` model _key-value_).
-- **Manajemen Role**: UI *User Management* untuk admin level atas menambahkan akun pekerja baru (Dokter/Kasir).
+## Status Implementasi
 
-## Skenario Testing Per Fitur
-- [ ] **Uji Coba Bypass URL (Security Test)**: Dalam keadaan tidak *login* (sudah logout), pengguna mencoba mengakses `http://localhost:9092/dokter/soap`. Filter harus memaksa pengalihan paksa (Redirect) ke halaman login.
-- [ ] **Autentikasi Hak Akses**: Pengguna login dengan NIP/Email 'Resepsionis', pastikan menu Sidebar di luar otoritasnya benar-benar tidak tampil, dan URL lain menolak *request* (Error 403 Forbidden).
-- [ ] **Kalkulasi Rekap Dashboard**: Memeriksa apakah jumlah Kunjungan (Pasien Baru/Lama) yang tertulis di widget sesuai persis dengan perhitungan `COUNT()` jumlah `transaksi_kunjungan` hari itu di database.
+### ✅ Sudah Jadi
+- **Autentikasi Session** — Login/logout dengan session, password di-hash `PASSWORD_BCRYPT`.
+- **RBAC Filter** — CI4 Filter `auth` dengan parameter role (`admin,dokter`, `admin,resepsionis`, dll). Cegah akses tanpa login, cegah akses URL role lain.
+- **Sidebar adaptif** — Menu yang tampil sesuai role user.
+- **Dashboard Home** — Statistik (total pasien, dokter, obat, antrean hari ini) dari `/api/dashboard/stats`.
+- **Grafik Charts** — ApexCharts terhubung ke API (tren kunjungan harian, tren pendapatan harian, distribusi poli).
+- **Profile** — Nama klinik, email, telepon dari settings API.
+- **Pengaturan (Settings)** — Form key-value, load/save via `/api/settings`.
+- **Header & Footer** — Notifikasi real-time (jumlah antrean), info kontak dari settings.
+- **User Management API** — CRUD user (`/api/users`), upload foto profile.
+- **Activity Logs** — Semua operasi CREATE/UPDATE/DELETE tercatat di `activity_logs`.
+- **Pagination** — Pagination tabel dinamis via utility helper `window.paginateTable`.
+- **Dark Mode** — Toggler dark mode yang persisten menggunakan local storage.
+- **Toast Notification** — Notifikasi toast modern dengan model overlay (`window.showToast`).
+- **Confirm Dialog** — Modal konfirmasi modern menggantikan alert native (`window.confirmDialog`).
+- **CSRF Protection** — Diaktifkan secara global di Filters.php dengan mitigasi fetch auto-injection, session-based.
+- **Laporan Kunjungan** — Grafik tren kunjungan pasien harian menggunakan ApexCharts.
+- **Laporan Pendapatan** — Grafik tren pendapatan klinik harian menggunakan ApexCharts.
+- **Laporan Distribusi Poli** — Grafik donat distribusi kunjungan per departemen/poli.
+- **Ekspor Raw Data (CSV)** — Pengunduhan data Kunjungan, Keuangan, dan Stok Obat dalam file CSV secara client-side.
+
+### ❌ Belum / Kurang
+- **Rate Limiting** — API belum ada rate limiter (opsional).
+- **Input Sanitasi** — Belum ada validasi server-side untuk XSS (opsional).
+- **Unit Test** — Belum ada PHPUnit test.
+- **Integration Test** — Belum ada test untuk API endpoints.
+
+## Skenario Testing
+- [x] **Bypass URL** — Tanpa login redirect ke halaman login.
+- [x] **Hak Akses** — Resepsionis tidak bisa akses `/dokter/soap` (403/dialog).
+- [x] **Kalkulasi Dashboard** — Jumlah kunjungan sesuai COUNT() di database.
+- [x] **CSRF** — Form submit tanpa token ditolak.
+- [x] **Dark Mode** — Toggle dark mode berfungsi dan persisten.
+- [x] **Toast & Dialog** — Notifikasi dan konfirmasi modern tampil saat operasi CRUD.
+- [x] **Pagination** — Tabel dengan data banyak ter-paginate dengan benar.
+- [x] **Ekspor CSV** — File CSV terunduh dengan data yang benar.

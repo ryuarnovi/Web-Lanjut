@@ -3,13 +3,29 @@
 ## Deskripsi Logic
 Apoteker bertugas mengelola keseluruhan rantai suplai (inventory) persediaan obat di dalam fasilitas klinik. Selain itu, Apoteker memproses dan menebus obat berdasarkan *E-Prescription* (resep elektronik) yang diterbitkan secara real-time oleh Dokter.
 
-## Kekurangan / Yang Perlu Ditambahkan
-- **CRUD Data Stok Obat**: Pembuatan fungsionalitas CRUD secara utuh ke database (Tabel `stok_obat`) meliputi Harga Beli, Harga Jual, Jenis/Kategori, dan Satuan (Tablet/Botol).
-- **Manajemen Batch & Kedaluwarsa (Expired)**: Tambahkan sistem notifikasi otomatis untuk stok obat yang akan kedaluwarsa atau sudah mencapai limit stok minimum.
-- **Konfirmasi Penebusan Resep**: UI/Logic untuk Apoteker dalam memverifikasi e-Resep yang di-submit Dokter, memeriksa ketersediaan riil stok fisik, mengkalkulasi harga obat total, dan memotong database stok jika obat diserahkan ke pasien.
-- **Riwayat Pengeluaran Obat**: Laporan log pergerakan inventaris (barang masuk dari supplier vs barang keluar ke pasien).
+## Status Implementasi
 
-## Skenario Testing Per Fitur
-- [ ] **Proses Stok Baru**: Memastikan data obat baru atau pembaruan jumlah stok berhasil disinkronkan ke seluruh sistem dan langsung tersedia di menu dropdown resep Dokter.
-- [ ] **Notifikasi Stok Menipis**: Menguji pemicu peringatan warna merah saat suatu item obat mencapai ambang batas sisa stok (misal < 10 strip).
-- [ ] **Kalkulasi & Kirim Tagihan ke Kasir**: Setelah resep di-*approve* (diberikan kepada pasien), pastikan total harga dari setiap butir resep secara utuh dihitung sistem dan ditambahkan ke *Invoice* akhir di Kasir.
+### ✅ Sudah Jadi
+- **CRUD Obat** — `kode_obat`, `nama_obat`, `deskripsi`, `fungsi_obat`, `efek_samping`, `kategori_obat`, `merek_obat`, `dosis_obat`, `unit`, `stok_obat`, `min_stock`, `harga` (eceran & grosir).
+- **Drug API** — CRUD lengkap + low-stock warning + detail.
+- **Supplier API** — CRUD supplier.
+- **Stock Transaction API** — Barang masuk/keluar.
+- **Resep (Penebusan)** — Tabel dari API `/api/prescriptions` dengan polling 10 detik.
+- **Detail Resep Modal** — Menampilkan items obat, jumlah, dosis.
+- **Proses Resep** — Tombol "Proses Resep" update status → `processed`, set `processed_by` & `processed_at`.
+- **Prescription API** — CRUD lengkap + items, transaction-safe.
+- **Konfirmasi penyerahan obat** — Tombol "Serahkan Obat" yang mengurangi stok real-time (`stok_obat - qty`), mencatat riwayat transaksi, dan menyelaraskan tagihan.
+- **Manajemen batch & kedaluwarsa** — Indikator warna merah untuk obat kadaluarsa dan mendekati kadaluarsa (< 30 hari) di halaman inventaris.
+- **Riwayat pergerakan stok** — Tab khusus "Log Transaksi Stok" di halaman inventaris yang menampilkan mutasi stok barang masuk/keluar dengan pagination.
+
+### ❌ Belum / Kurang
+- **Notifikasi push stok menipis** — Belum ada notifikasi otomatis (email/push) saat stok mendekati `min_stock` (saat ini hanya badge visual di tabel).
+
+## Skenario Testing
+- [x] **Stok Baru & Update** — Data obat tersedia di dropdown resep Dokter.
+- [x] **Resep Masuk** — Prescription dari Dokter muncul di tabel Apoteker.
+- [x] **Proses Resep** — Status berubah `pending` → `processed`.
+- [x] **Serahkan Obat** — Stok berkurang, status berubah `processed` → `completed`.
+- [x] **Indikator Stok Menipis** — Warna merah saat stok ≤ `min_stock`, badge "Low Stock".
+- [x] **Indikator Kadaluarsa** — Warna merah + badge "Expired"/"Near Expiry" untuk obat kedaluwarsa/hampir kedaluwarsa.
+- [x] **Log Transaksi Stok** — Tab riwayat pergerakan stok menampilkan data masuk/keluar.

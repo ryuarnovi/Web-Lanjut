@@ -159,17 +159,41 @@ class Dokter extends BaseController
     {
         $input = $this->request->getJSON(true);
 
+        $patientID = !empty($input['patient_id']) ? (int) $input['patient_id'] : 0;
+        $subjective = trim($input['subjective'] ?? '');
+        $assessment = trim($input['assessment'] ?? '');
+
+        if (!$patientID) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'ID Pasien wajib diisi.']);
+        }
+        if (empty($subjective)) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Keluhan Pasien (Subjective) wajib diisi.']);
+        }
+        if (empty($assessment)) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Diagnosa / Penilaian (Assessment) wajib diisi.']);
+        }
+
         $visitDate = !empty($input['visit_date']) ? $input['visit_date'] : date('Y-m-d H:i:s');
         $queueID = !empty($input['queue_id']) ? (int) $input['queue_id'] : null;
+        $doctorID = $input['doctor_id'] ?? session()->get('user_id');
 
-        $this->db->query("INSERT INTO medical_records (patient_id, queue_id, doctor_id, visit_date, subjective, objective, assessment, plan, vital_signs, icd_code, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())", [
-            $input['patient_id'], $queueID, $input['doctor_id'], $visitDate,
-            $input['subjective'] ?? null, $input['objective'] ?? null, $input['assessment'] ?? null,
+        $this->db->query("INSERT INTO medical_records (patient_id, queue_id, doctor_id, visit_date, subjective, objective, assessment, plan, vital_signs, icd_code, icd9_code, tindakan_fee, doctor_fee, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())", [
+            $patientID, $queueID, $doctorID, $visitDate,
+            $subjective, $input['objective'] ?? null, $assessment,
             $input['plan'] ?? null, $input['vital_signs'] ?? null, $input['icd_code'] ?? null,
+            $input['icd9_code'] ?? null, $input['tindakan_fee'] ?? 0.00, $input['doctor_fee'] ?? 50000.00,
         ]);
 
         $id = $this->db->insertID();
-        $this->logActivity('CREATE', 'medical_records', $id, 'Membuat rekam medis baru untuk pasien ID ' . $input['patient_id']);
+
+        if ($queueID) {
+            $this->db->query("UPDATE queues SET status = 'completed', completed_at = NOW() WHERE id = ?", [$queueID]);
+        }
+
+        // Sync payment invoice for this medical record
+        $this->syncPayment($id);
+
+        $this->logActivity('CREATE', 'medical_records', $id, 'Membuat rekam medis baru untuk pasien ID ' . $patientID);
         return $this->response->setStatusCode(201)->setJSON(['message' => 'Medical record created', 'data' => $id]);
     }
 
@@ -184,6 +208,9 @@ class Dokter extends BaseController
         if (isset($input['plan'])) $fields['plan'] = $input['plan'];
         if (isset($input['vital_signs'])) $fields['vital_signs'] = $input['vital_signs'];
         if (isset($input['icd_code'])) $fields['icd_code'] = $input['icd_code'];
+        if (isset($input['icd9_code'])) $fields['icd9_code'] = $input['icd9_code'];
+        if (isset($input['tindakan_fee'])) $fields['tindakan_fee'] = $input['tindakan_fee'];
+        if (isset($input['doctor_fee'])) $fields['doctor_fee'] = $input['doctor_fee'];
 
         if (empty($fields)) {
             return $this->response->setJSON(['message' => 'Medical record updated']);
@@ -207,7 +234,7 @@ class Dokter extends BaseController
         $userID = session()->get('user_id');
         $role = strtolower(session()->get('role') ?? '');
 
-        $sql = "SELECT mr.id, mr.patient_id, mr.queue_id, mr.doctor_id, mr.visit_date, mr.subjective, mr.objective, mr.assessment, mr.plan, mr.vital_signs, mr.icd_code, mr.created_at, mr.updated_at, p.full_name as patient_name, q.queue_number, q.queue_date, q.status as queue_status, u.full_name as doctor_name FROM medical_records mr LEFT JOIN patients p ON mr.patient_id = p.id LEFT JOIN queues q ON mr.queue_id = q.id LEFT JOIN users u ON mr.doctor_id = u.id WHERE 1=1";
+        $sql = "SELECT mr.id, mr.patient_id, mr.queue_id, mr.doctor_id, mr.visit_date, mr.subjective, mr.objective, mr.assessment, mr.plan, mr.vital_signs, mr.icd_code, mr.icd9_code, mr.tindakan_fee, mr.doctor_fee, mr.created_at, mr.updated_at, p.full_name as patient_name, q.queue_number, q.queue_date, q.status as queue_status, u.full_name as doctor_name FROM medical_records mr LEFT JOIN patients p ON mr.patient_id = p.id LEFT JOIN queues q ON mr.queue_id = q.id LEFT JOIN users u ON mr.doctor_id = u.id WHERE 1=1";
         $params = [];
 
         if ($role === 'dokter') {
@@ -225,7 +252,7 @@ class Dokter extends BaseController
 
     public function getMedicalRecord($id)
     {
-        $query = $this->db->query("SELECT mr.id, mr.patient_id, mr.queue_id, mr.doctor_id, mr.visit_date, mr.subjective, mr.objective, mr.assessment, mr.plan, mr.vital_signs, mr.icd_code, mr.created_at, mr.updated_at, p.full_name as patient_name, q.queue_number, q.queue_date, q.status as queue_status, u.full_name as doctor_name FROM medical_records mr LEFT JOIN patients p ON mr.patient_id = p.id LEFT JOIN queues q ON mr.queue_id = q.id LEFT JOIN users u ON mr.doctor_id = u.id WHERE mr.id = ?", [(int) $id]);
+        $query = $this->db->query("SELECT mr.id, mr.patient_id, mr.queue_id, mr.doctor_id, mr.visit_date, mr.subjective, mr.objective, mr.assessment, mr.plan, mr.vital_signs, mr.icd_code, mr.icd9_code, mr.tindakan_fee, mr.doctor_fee, mr.created_at, mr.updated_at, p.full_name as patient_name, q.queue_number, q.queue_date, q.status as queue_status, u.full_name as doctor_name FROM medical_records mr LEFT JOIN patients p ON mr.patient_id = p.id LEFT JOIN queues q ON mr.queue_id = q.id LEFT JOIN users u ON mr.doctor_id = u.id WHERE mr.id = ?", [(int) $id]);
 
         $record = $query->getRowArray();
         if (!$record) {
@@ -307,5 +334,46 @@ class Dokter extends BaseController
         $this->db->query("INSERT INTO activity_logs (user_id, action, entity, entity_id, description, ip_address, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())", [
             $userID, $action, $entity, $entityID, $description, $ip,
         ]);
+    }
+
+    private function syncPayment($medRecID)
+    {
+        $medRec = $this->db->query("SELECT * FROM medical_records WHERE id = ?", [(int)$medRecID])->getRowArray();
+        if (!$medRec) return;
+
+        $patientID = $medRec['patient_id'];
+        $doctorFee = $medRec['doctor_fee'] ?? 50000.00;
+        $tindakanFee = $medRec['tindakan_fee'] ?? 0.00;
+        $adminFee = 10000.00;
+
+        // Check if there is an existing prescription for this medical record
+        $prescription = $this->db->query("SELECT id FROM prescriptions WHERE medical_record_id = ?", [(int)$medRecID])->getRowArray();
+        $prescriptionID = $prescription ? (int)$prescription['id'] : null;
+
+        $medicineCost = 0;
+        if ($prescriptionID) {
+            $items = $this->db->query("SELECT pi.quantity, d.harga_jual_eceran FROM prescription_items pi JOIN drugs d ON pi.drug_id = d.id WHERE pi.prescription_id = ?", [$prescriptionID])->getResultArray();
+            foreach ($items as $item) {
+                $medicineCost += ($item['quantity'] * $item['harga_jual_eceran']);
+            }
+        }
+
+        $totalAmount = $doctorFee + $tindakanFee + $adminFee + $medicineCost;
+
+        $existing = $this->db->query("SELECT id FROM payments WHERE medical_record_id = ? AND status = 'unpaid'", [(int)$medRecID])->getRowArray();
+        if (!$existing) {
+            $existing = $this->db->query("SELECT id FROM payments WHERE patient_id = ? AND DATE(created_at) = CURDATE() AND status = 'unpaid'", [(int)$patientID])->getRowArray();
+        }
+
+        if ($existing) {
+            $this->db->query("UPDATE payments SET prescription_id = ?, doctor_fee = ?, tindakan_fee = ?, medicine_cost = ?, admin_fee = ?, total_amount = ? WHERE id = ?", [
+                $prescriptionID, $doctorFee, $tindakanFee, $medicineCost, $adminFee, $totalAmount, (int)$existing['id']
+            ]);
+        } else {
+            $paymentCode = 'INV-' . time() . rand(10, 99);
+            $this->db->query("INSERT INTO payments (payment_code, patient_id, medical_record_id, prescription_id, total_amount, payment_method, paid_amount, change_amount, status, doctor_fee, tindakan_fee, medicine_cost, admin_fee, discount, tax, notes, created_at) VALUES (?, ?, ?, ?, ?, 'cash', 0, 0, 'unpaid', ?, ?, ?, ?, 0, 0, 'Auto-generated invoice from medical record', NOW())", [
+                $paymentCode, $patientID, $medRecID, $prescriptionID, $totalAmount, $doctorFee, $tindakanFee, $medicineCost, $adminFee
+            ]);
+        }
     }
 }

@@ -44,6 +44,7 @@ class Auth extends BaseController
             switch ($user['role']) {
                 case 'resepsionis': return redirect()->to(base_url('resepsionis/pendaftaran'));
                 case 'dokter':      return redirect()->to(base_url('dokter/antrean'));
+                case 'perawat':     return redirect()->to(base_url('perawat/antrean'));
                 case 'apoteker':    return redirect()->to(base_url('apoteker/resep'));
                 case 'kasir':       return redirect()->to(base_url('kasir/data'));
                 default:            return redirect()->to(base_url('dashboard'));

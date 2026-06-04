@@ -31,18 +31,46 @@ class Resepsionis extends BaseController
     {
         $input = $this->request->getJSON(true);
 
-        $patientCode = $input['patient_code'] ?? ('P' . substr(time(), 5));
+        $nik = $input['nik'] ?? '';
+        $email = $input['email'] ?? null;
+
+        if (empty($nik)) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'NIK wajib diisi']);
+        }
+
+        // Validate unique NIK
+        $existingNik = $this->db->query("SELECT id FROM patients WHERE nik = ?", [$nik])->getRow();
+        if ($existingNik) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Pasien dengan NIK tersebut sudah terdaftar!']);
+        }
+
+        // Validate unique Email if provided
+        if (!empty($email)) {
+            $existingEmail = $this->db->query("SELECT id FROM patients WHERE email = ?", [$email])->getRow();
+            if ($existingEmail) {
+                return $this->response->setStatusCode(400)->setJSON(['error' => 'Email sudah digunakan oleh pasien lain!']);
+            }
+        }
+
+        // Auto-generate patient code (RM number): RM-YYMM-XXXX
+        $todayCount = $this->db->query("SELECT COUNT(*) as c FROM patients WHERE YEAR(created_at) = YEAR(NOW()) AND MONTH(created_at) = MONTH(NOW())")->getRow()->c;
+        $patientCode = 'RM-' . date('ym') . '-' . sprintf('%04d', $todayCount + 1);
+        while ($this->db->query("SELECT id FROM patients WHERE patient_code = ?", [$patientCode])->getRow()) {
+            $todayCount++;
+            $patientCode = 'RM-' . date('ym') . '-' . sprintf('%04d', $todayCount + 1);
+        }
+
         $status = $input['status'] ?? 'active';
 
         $this->db->query("INSERT INTO patients (patient_code, nik, full_name, date_of_birth, gender, address, phone, email, blood_type, allergies, emergency_contact, emergency_phone, is_walkin, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())", [
             $patientCode,
-            $input['nik'] ?? '',
+            $nik,
             $input['full_name'] ?? '',
             $input['date_of_birth'] ?? null,
             $input['gender'] ?? '',
             $input['address'] ?? null,
             $input['phone'] ?? null,
-            $input['email'] ?? null,
+            $email,
             $input['blood_type'] ?? null,
             $input['allergies'] ?? null,
             $input['emergency_contact'] ?? null,
@@ -122,11 +150,12 @@ class Resepsionis extends BaseController
     {
         $userID = session()->get('user_id');
         $role = strtolower(session()->get('role') ?? '');
+        $all = $this->request->getGet('all');
 
         $sql = "SELECT DISTINCT p.id, p.patient_code, p.nik, p.full_name, p.date_of_birth, p.gender, p.address, p.phone, p.email, p.blood_type, p.allergies, p.emergency_contact, p.emergency_phone, p.is_walkin, p.status, p.created_at, p.updated_at FROM patients p";
         $params = [];
 
-        if ($role === 'dokter') {
+        if ($role === 'dokter' && !$all) {
             $sql .= " LEFT JOIN queues q ON p.id = q.patient_id LEFT JOIN medical_records mr ON p.id = mr.patient_id WHERE q.doctor_id = ? OR mr.doctor_id = ?";
             $params[] = $userID;
             $params[] = $userID;
@@ -135,6 +164,7 @@ class Resepsionis extends BaseController
             $params[] = $userID;
         }
 
+        $sql .= " ORDER BY p.full_name ASC";
         $query = $this->db->query($sql, $params);
         return $this->response->setJSON(['data' => $query->getResultArray()]);
     }
@@ -161,24 +191,43 @@ class Resepsionis extends BaseController
     {
         $input = $this->request->getJSON(true);
 
-        $queueDate = $input['queue_date'] ?? date('Y-m-d');
-        $todayCount = $this->db->query("SELECT COUNT(*) as c FROM queues WHERE queue_date = ?", [$queueDate])->getRow()->c;
-        $queueNumber = $input['queue_number'] ?? sprintf('%03d', $todayCount + 1);
+        $poli = $input['poli'] ?? 'Umum';
+        $prefix = 'Q';
+        if (stripos($poli, 'Umum') !== false) {
+            $prefix = 'A';
+        } elseif (stripos($poli, 'Gigi') !== false) {
+            $prefix = 'B';
+        } elseif (stripos($poli, 'Anak') !== false) {
+            $prefix = 'C';
+        }
 
-        $this->db->query("INSERT INTO queues (patient_id, queue_number, queue_date, status, created_by, doctor_id, nurse_id, loket, created_at) VALUES (?, ?, ?, 'waiting', ?, ?, ?, ?, NOW())", [
+        $queueDate = $input['queue_date'] ?? date('Y-m-d');
+        
+        // Count today's queues for this specific poli to reset daily per-poli
+        $todayPoliCount = $this->db->query("SELECT COUNT(*) as c FROM queues WHERE queue_date = ? AND poli = ?", [$queueDate, $poli])->getRow()->c;
+        $queueNumber = $input['queue_number'] ?? ($prefix . '-' . sprintf('%03d', $todayPoliCount + 1));
+
+        $visitType = $input['visit_type'] ?? 'rawat_jalan';
+
+        $this->db->TransBegin();
+        $this->db->query("INSERT INTO queues (patient_id, queue_number, queue_date, status, created_by, doctor_id, nurse_id, loket, poli, visit_type, created_at) VALUES (?, ?, ?, 'waiting', ?, ?, ?, ?, ?, ?, NOW())", [
             $input['patient_id'], $queueNumber, $queueDate,
             $input['created_by'] ?? session()->get('user_id'),
             $input['doctor_id'] ?? null,
             $input['nurse_id'] ?? null,
             $input['loket'] ?? null,
+            $poli,
+            $visitType,
         ]);
 
         $id = $this->db->insertID();
         if (!$id) {
+            $this->db->TransRollback();
             return $this->response->setStatusCode(500)->setJSON(['error' => 'Gagal membuat antrean']);
         }
+        $this->db->TransCommit();
 
-        $this->logActivity('CREATE', 'queues', $id, 'Menambahkan antrean baru #' . $queueNumber);
+        $this->logActivity('CREATE', 'queues', $id, 'Menambahkan antrean baru #' . $queueNumber . ' di Poli ' . $poli);
         return $this->response->setStatusCode(201)->setJSON(['message' => 'Queue created', 'data' => $id]);
     }
 
@@ -227,7 +276,7 @@ class Resepsionis extends BaseController
 
     public function getQueue($id)
     {
-        $query = $this->db->query("SELECT q.id, q.patient_id, q.queue_number, q.queue_date, q.status, q.created_by, q.doctor_id, q.nurse_id, q.loket, q.called_at, q.completed_at, q.created_at, p.full_name as patient_name, u.full_name as created_by_name FROM queues q LEFT JOIN patients p ON q.patient_id = p.id LEFT JOIN users u ON q.created_by = u.id WHERE q.id = ?", [(int) $id]);
+        $query = $this->db->query("SELECT q.id, q.patient_id, q.queue_number, q.queue_date, q.status, q.created_by, q.doctor_id, q.nurse_id, q.loket, q.poli, q.called_at, q.completed_at, q.created_at, p.full_name as patient_name, p.patient_code, u.full_name as created_by_name FROM queues q LEFT JOIN patients p ON q.patient_id = p.id LEFT JOIN users u ON q.created_by = u.id WHERE q.id = ?", [(int) $id]);
 
         $queue = $query->getRowArray();
         if (!$queue) {
@@ -241,7 +290,7 @@ class Resepsionis extends BaseController
         $userID = session()->get('user_id');
         $role = strtolower(session()->get('role') ?? '');
 
-        $sql = "SELECT q.id, q.patient_id, q.queue_number, q.queue_date, q.status, q.created_by, q.doctor_id, q.nurse_id, q.loket, q.called_at, q.completed_at, q.created_at, p.full_name as patient_name, u.full_name as created_by_name FROM queues q LEFT JOIN patients p ON q.patient_id = p.id LEFT JOIN users u ON q.created_by = u.id WHERE 1=1";
+        $sql = "SELECT q.id, q.patient_id, q.queue_number, q.queue_date, q.status, q.created_by, q.doctor_id, q.nurse_id, q.loket, q.poli, q.called_at, q.completed_at, q.created_at, p.full_name as patient_name, p.patient_code, u.full_name as created_by_name FROM queues q LEFT JOIN patients p ON q.patient_id = p.id LEFT JOIN users u ON q.created_by = u.id WHERE 1=1";
         $params = [];
 
         if ($role === 'dokter') {
@@ -254,6 +303,12 @@ class Resepsionis extends BaseController
 
         $sql .= " ORDER BY q.id ASC";
         $query = $this->db->query($sql, $params);
+        return $this->response->setJSON(['data' => $query->getResultArray()]);
+    }
+
+    public function listDoctors()
+    {
+        $query = $this->db->query("SELECT id, full_name, specialization FROM users WHERE role = 'dokter' AND is_active = 1 ORDER BY full_name ASC");
         return $this->response->setJSON(['data' => $query->getResultArray()]);
     }
 
@@ -313,10 +368,51 @@ class Resepsionis extends BaseController
 
     // ============ ACTIVITY LOG HELPER ============
 
+    // ============ LOKET API ============
+
+    public function listLokets()
+    {
+        $query = $this->db->query("SELECT * FROM lokets ORDER BY id ASC");
+        return $this->response->setJSON(['data' => $query->getResultArray()]);
+    }
+
+    public function createLoket()
+    {
+        $input = $this->request->getJSON(true);
+        $this->db->query("INSERT INTO lokets (name, description, is_active, created_at) VALUES (?, ?, 1, NOW())", [
+            $input['name'],
+            $input['description'] ?? null,
+        ]);
+        $id = $this->db->insertID();
+        $this->logActivity('CREATE', 'lokets', $id, 'Menambahkan loket ' . $input['name']);
+        return $this->response->setStatusCode(201)->setJSON(['message' => 'Loket created', 'data' => $id]);
+    }
+
+    public function updateLoket($id)
+    {
+        $input = $this->request->getJSON(true);
+        $set = []; $params = [];
+        if (isset($input['name'])) { $set[] = "name = ?"; $params[] = $input['name']; }
+        if (isset($input['description'])) { $set[] = "description = ?"; $params[] = $input['description']; }
+        if (isset($input['is_active'])) { $set[] = "is_active = ?"; $params[] = $input['is_active'] ? 1 : 0; }
+        if (empty($set)) return $this->response->setStatusCode(400)->setJSON(['error' => 'No data']);
+        $params[] = (int) $id;
+        $this->db->query("UPDATE lokets SET " . implode(', ', $set) . " WHERE id = ?", $params);
+        $this->logActivity('UPDATE', 'lokets', (int) $id, 'Memperbarui loket');
+        return $this->response->setJSON(['message' => 'Loket updated']);
+    }
+
+    public function deleteLoket($id)
+    {
+        $this->db->query("DELETE FROM lokets WHERE id = ?", [(int) $id]);
+        return $this->response->setJSON(['message' => 'Loket deleted']);
+    }
+
     private function logActivity($action, $entity, $entityID, $description)
     {
         $userID = session()->get('user_id') ?? 0;
         $ip = $this->request->getIPAddress();
+
         $this->db->query("INSERT INTO activity_logs (user_id, action, entity, entity_id, description, ip_address, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())", [
             $userID, $action, $entity, $entityID, $description, $ip,
         ]);

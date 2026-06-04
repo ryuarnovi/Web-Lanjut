@@ -64,7 +64,7 @@ class Kasir extends BaseController
 
     public function listPayments()
     {
-        $query = $this->db->query("SELECT p.id, p.payment_code as invoice_number, p.patient_id, p.medical_record_id, p.prescription_id, p.payment_date, p.total_amount as total, p.payment_method, p.paid_amount, p.change_amount, p.status, p.processed_by, p.doctor_fee, p.medicine_cost, p.admin_fee, p.discount, p.tax, p.notes, pa.full_name as patient_name, pr.prescription_code, u.full_name as processed_by_name FROM payments p LEFT JOIN patients pa ON p.patient_id = pa.id LEFT JOIN prescriptions pr ON p.prescription_id = pr.id LEFT JOIN users u ON p.processed_by = u.id ORDER BY p.payment_date DESC");
+        $query = $this->db->query("SELECT p.id, p.payment_code as invoice_number, p.patient_id, p.medical_record_id, p.prescription_id, p.payment_date, p.total_amount as total, p.payment_method, p.paid_amount, p.change_amount, p.status, p.processed_by, p.doctor_fee, p.tindakan_fee, p.medicine_cost, p.admin_fee, p.discount, p.tax, p.notes, pa.full_name as patient_name, pr.prescription_code, u.full_name as processed_by_name FROM payments p LEFT JOIN patients pa ON p.patient_id = pa.id LEFT JOIN prescriptions pr ON p.prescription_id = pr.id LEFT JOIN users u ON p.processed_by = u.id ORDER BY p.payment_date DESC");
 
         return $this->response->setJSON(['data' => $query->getResultArray()]);
     }
@@ -79,6 +79,10 @@ class Kasir extends BaseController
         if (isset($input['change_amount'])) $fields['change_amount'] = $input['change_amount'];
         if (isset($input['payment_method'])) $fields['payment_method'] = $input['payment_method'];
         if (isset($input['processed_by'])) $fields['processed_by'] = $input['processed_by'];
+        if (isset($input['discount'])) $fields['discount'] = $input['discount'];
+        if (isset($input['tax'])) $fields['tax'] = $input['tax'];
+        if (isset($input['total_amount'])) $fields['total_amount'] = $input['total_amount'];
+        if (isset($input['notes'])) $fields['notes'] = $input['notes'];
 
         if (empty($fields)) {
             return $this->response->setStatusCode(400)->setJSON(['error' => 'No data to update']);
