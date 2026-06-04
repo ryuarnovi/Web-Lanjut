@@ -155,4 +155,74 @@
     </div>
   </div>
 </section>
+<script>
+async function loadProfileData() {
+    try {
+        const [resUser, resSettings] = await Promise.all([
+            fetch('/api/users/me'),
+            fetch('/api/settings')
+        ]);
+        const userJson = await resUser.json();
+        const setJson = await resSettings.json();
+        const u = userJson.data || userJson.user || userJson;
+        const s = setJson.data || {};
+        if (u) {
+            const nama = u.name || u.nama || u.full_name || u.username || '-';
+            const email = u.email || '-';
+            const phone = u.phone || u.telp || u.telepon || '-';
+            const company = s.nama_klinik || 'KlinikOS 2.0 Medical Center';
+            const detailGrid = document.querySelector('#overview .grid');
+            if (detailGrid) {
+                const cols = detailGrid.querySelectorAll('[class*="col-span-2"]');
+                cols.forEach(el => {
+                    const label = el.previousElementSibling?.textContent || '';
+                    if (label.includes('Nama Lengkap')) el.textContent = nama;
+                    if (label.includes('Perusahaan')) el.textContent = company;
+                    if (label.includes('Email')) el.textContent = email;
+                    if (label.includes('Telepon')) el.textContent = phone;
+                });
+            }
+            const editForm = document.querySelector('#edit-profile form');
+            if (editForm) {
+                const inputs = editForm.querySelectorAll('input');
+                inputs.forEach(inp => {
+                    if (inp.type === 'text' && inp.closest('#edit-profile') && !inp.closest('#change-password')) {
+                        const label = inp.closest('.grid')?.querySelector('.form-label')?.textContent || '';
+                        if (label.includes('Nama')) inp.value = nama;
+                        if (label.includes('Perusahaan')) inp.value = company;
+                        if (label.includes('Telepon')) inp.value = phone;
+                    }
+                    if (inp.type === 'email' && inp.closest('#edit-profile')) inp.value = email;
+                });
+                const textarea = editForm.querySelector('textarea');
+                if (textarea) textarea.value = 'Berkomitmen penuh dalam mengelola sistem ' + company;
+            }
+        }
+    } catch(e) {}
+}
+document.addEventListener('DOMContentLoaded', function() {
+    loadProfileData();
+    document.querySelector('#edit-profile form')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const data = { name: this.querySelector('input[type="text"]')?.value || '', email: this.querySelector('input[type="email"]')?.value || '' };
+        try {
+            const res = await fetch('/api/users/me', { method:'POST', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify(data) });
+            const json = await res.json();
+            alert(json.message || 'Profil berhasil diperbarui');
+        } catch(e) { alert('Gagal'); }
+    });
+    document.querySelector('#change-password form')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const inputs = this.querySelectorAll('input[type="password"]');
+        const data = { password_lama: inputs[0]?.value || '', password_baru: inputs[1]?.value || '', password_konfirmasi: inputs[2]?.value || '' };
+        if (data.password_baru !== data.password_konfirmasi) return alert('Password baru tidak cocok');
+        try {
+            const res = await fetch('/api/users/me', { method:'POST', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify(data) });
+            const json = await res.json();
+            alert(json.message || 'Password berhasil diubah');
+            this.reset();
+        } catch(e) { alert('Gagal'); }
+    });
+});
+</script>
 <?= $this->endSection() ?>

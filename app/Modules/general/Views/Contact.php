@@ -234,6 +234,7 @@
             </div>
 
             <form action="#" method="post" class="space-y-6">
+                <?= csrf_field() ?>
 
                 <div class="grid md:grid-cols-2 gap-6">
 

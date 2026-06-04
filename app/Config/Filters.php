@@ -72,14 +72,15 @@ class Filters extends BaseFilters
      * }
      */
     public array $globals = [
-    'before' => [
-        'auth' => ['except' => ['/', 'login', 'login/auth', 'general', 'general/*', 'service', 'about', 'contact']],
-    ],
-    'after' => [
-        // 'honeypot',
-        // 'secureheaders',
-    ],
-];
+        'before' => [
+            'auth' => ['except' => ['/', 'login', 'login/auth', 'general', 'general/*', 'service', 'about', 'contact']],
+            'csrf' => ['except' => ['api/midtrans/webhook']],
+        ],
+        'after' => [
+            // 'honeypot',
+            // 'secureheaders',
+        ],
+    ];
 
     /**
      * List of filter aliases that works on a

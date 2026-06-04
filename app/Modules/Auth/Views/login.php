@@ -109,6 +109,7 @@
                 <?php endif; ?>
 
                 <form method="POST" action="<?= base_url('login/auth') ?>" class="space-y-4" id="loginForm">
+                    <?= csrf_field() ?>
 
                     <!-- Username -->
                     <div class="space-y-1">

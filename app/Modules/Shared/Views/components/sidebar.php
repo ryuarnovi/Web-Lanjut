@@ -43,6 +43,22 @@
       </li>
       <?php endif; ?>
 
+      <!-- Section: Perawat -->
+      <?php if (in_array($role, ['admin', 'perawat'])): ?>
+      <li class="nav-heading">Layanan Klinis</li>
+      <li class="nav-item">
+        <button class="nav-link <?= str_contains(uri_string(), 'perawat') ? 'expanded' : '' ?>" data-toggle="collapse" data-target="#nav-mod-perawat">
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12h15m-7.5-7.5v15" /></svg>
+          <span>Perawat</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="chevron h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+        </button>
+        <div id="nav-mod-perawat" class="nav-sub <?= str_contains(uri_string(), 'perawat') ? 'open' : '' ?>">
+          <a href="<?= base_url('perawat/antrean') ?>" class="<?= uri_string() == 'perawat/antrean' ? 'active' : '' ?>">Antrean Pasien</a>
+          <a href="<?= base_url('perawat/periksa') ?>" class="<?= uri_string() == 'perawat/periksa' ? 'active' : '' ?>">Pemeriksaan Awal</a>
+        </div>
+      </li>
+      <?php endif; ?>
+
       <!-- Section: Apoteker -->
       <?php if (in_array($role, ['admin', 'apoteker'])): ?>
       <li class="nav-heading">Layanan Farmasi</li>
@@ -55,6 +71,7 @@
         <div id="nav-mod-apoteker" class="nav-sub <?= str_contains(uri_string(), 'apoteker') ? 'open' : '' ?>">
           <a href="<?= base_url('apoteker/resep') ?>" class="<?= uri_string() == 'apoteker/resep' ? 'active' : '' ?>">Resep Masuk</a>
           <a href="<?= base_url('apoteker/stok') ?>" class="<?= uri_string() == 'apoteker/stok' ? 'active' : '' ?>">Stok Obat</a>
+          <a href="<?= base_url('apoteker/supplier') ?>" class="<?= uri_string() == 'apoteker/supplier' ? 'active' : '' ?>">Supplier</a>
         </div>
       </li>
       <?php endif; ?>

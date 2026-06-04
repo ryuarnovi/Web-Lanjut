@@ -9,10 +9,39 @@ services:
       - /var/www/html/node_modules
     environment:
       - CI_ENVIRONMENT=development
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
 
   tailwind:
     image: node:20-alpine
+    profiles:
+      - tailwind
     working_dir: /app
     volumes:
       - .:/app
     command: sh -c "npm install && npm run dev"
+
+  db:
+    image: mysql:8.0
+    container_name: web_lanjut_db
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: web_lanjut_db
+      MYSQL_USER: web_lanjut_user
+      MYSQL_PASSWORD: web_lanjut_pass
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./app/Database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  db_data:

@@ -1,108 +1,127 @@
-# KlinikOS 2.0 - Clinical Management System
+# KlinikOS 2.0 — Clinical Management System
 
-KlinikOS 2.0 is a modern, scalable clinical management system built on the CodeIgniter 4 framework. It utilizes a Modular (HMVC) architecture to ensure separation of concerns and maintainability across various clinical operations. The user interface is strictly styled using Tailwind CSS v4, delivering a responsive and highly performant experience.
+KlinikOS 2.0 is a modern clinical management system built on **CodeIgniter 4** (HMVC Modular) with **Tailwind CSS v4**. The backend was ported from Go (KlinikOS-2.0) into PHP CI4 controllers with full REST API endpoints for every module.
 
-## Project Structure (Modular Architecture)
+## Architecture
 
-KlinikOS utilizes a modular approach where each primary feature is isolated within the `app/Modules` directory. This ensures that business logic, controllers, and views are encapsulated per domain.
-
-```text
-KlinikOS/
-├── app/
-│   ├── Modules/              
-│   │   ├── Auth/             (Authentication, Session, Role-Based Access Control)
-│   │   ├── Dashboard/        (Home, User Profile, Reports)
-│   │   ├── Resepsionis/      (Patient Registration & Queue Management)
-│   │   ├── Dokter/           (Medical Assessment, EMR, SOAP, E-Prescription)
-│   │   ├── Apoteker/         (Pharmacy, Inventory Management)
-│   │   ├── Kasir/            (Billing, Invoicing, Payment Gateway)
-│   │   └── Shared/           (Global Layouts, Sidebar, Header components)
-│   └── Config/               (Autoload configurations for Modules)
-├── public/
-│   └── assets/               (Compiled CSS, Static Images, Vendor JS)
-├── docker-compose.yml        (Container orchestration configuration)
-└── Dockerfile                (Build instructions for PHP 8.4-apache image)
+```
+app/Modules/
+├── Auth/           Login, Register, User CRUD, Profile
+├── Dashboard/      Executive Dashboard, Laporan, Pengaturan
+├── Resepsionis/    Patient Registration, Queue Management (dengan sistem Loket)
+├── Dokter/         SOAP EMR, ICD-10/9, Resep, Rujukan
+├── Apoteker/       Drug Inventory, Prescription Fulfillment
+├── Kasir/          Billing, Payment (Midtrans), Multi-channel
+└── Shared/         Global Layout, Sidebar, Header, Footer
 ```
 
-## Setup and Installation
+## Quick Start
 
-The development and production environments are strictly containerized using Docker. Follow these instructions to deploy the application locally.
-
-### 1. Environment Configuration
-Copy the example environment file to initialize your local configuration:
 ```bash
 cp env.example .env
+docker compose up -d
 ```
 
-### 2. Docker Orchestration
-Use Docker Compose to build the required images and start the containers.
-*Note: The build process now automatically installs Node.js 20 and dependencies (NPM & Composer) inside the container.*
-```bash
-docker compose up --build -d
-```
-*Note: The `-d` flag runs the containers in the background.*
+| Service | URL |
+|---------|-----|
+| App | http://localhost:9092 |
+| MySQL | localhost:3307 |
 
-### 3. Application Access
-Once the containers are running, access the application via your web browser:
-- **URL**: `http://localhost:9092`
-- **Default Credentials**:
-  - Username: `admin`
-  - Password: `admin`
+### Seed Users (password: `root210605`)
 
-## Development Guidelines
+| Username | Role |
+|----------|------|
+| `admin` | admin |
+| `resepsionis1` | resepsionis |
+| `dokter1` | dokter |
+| `apoteker1` | apoteker |
+| `kasir1` | kasir |
+| `admin2` | admin |
 
-### Tailwind CSS v4 Build System
-The project uses Tailwind CSS v4 with an NPM-based workflow integrated into Docker. You do not need Node.js or the Tailwind binary on your host machine.
+## API Endpoints (all under `/api/`, session auth)
 
-- **Development (Automatic)**:
-  The `tailwind` service in `docker-compose.yml` automatically watches for changes and recompiles CSS using `npm run dev`.
-- **Production Build (Manual/CI)**:
-  The Dockerfile automatically runs `npm run build` during the image creation process.
+### Auth
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | JSON login |
+| POST | `/api/auth/register` | Register user |
+| GET | `/api/users/me` | Current user profile |
+| POST | `/api/users/me` | Update profile |
+| POST | `/api/users/me/photo` | Upload foto profil |
+| GET | `/api/users` | List all users |
+| GET/POST/PUT/DELETE | `/api/users/{id}` | CRUD user |
 
-### Navbar & Navigation
+### Resepsionis
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET/POST | `/api/patients` | List / Create pasien |
+| GET/PUT/DELETE | `/api/patients/{id}` | Get / Update / Delete pasien |
+| GET | `/api/patients/payments` | Riwayat pembayaran pasien |
+| GET/POST | `/api/queues` | List / Create antrean |
+| GET/PUT/DELETE | `/api/queues/{id}` | Get / Update (call/complete) / Delete |
+| GET | `/api/activity-logs` | Log aktivitas sistem |
 
-- The frontend includes a responsive navbar used across module views (see `app/Modules/general/Views/General.php`).
-- Links: `Tentang`, `Layanan`, `Dokter`, `Kontak` and a prominent `Booking` CTA. On small screens a mobile menu toggle is shown.
-- To update labels or targets, edit the markup in `app/Modules/general/Views/General.php` or move the navbar into the `Shared` module for global reuse.
-- Use `<?= base_url('path/to/page') ?>` when linking to internal routes so URLs remain valid across environments and Docker containers.
+### Dokter
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET/POST | `/api/medical-records` | List / Create rekam medis (SOAP) |
+| PUT/DELETE | `/api/medical-records/{id}` | Update / Delete |
+| GET/POST/PUT/DELETE | `/api/referrals` | CRUD rujukan |
+| GET/POST/PUT/DELETE | `/api/schedules` | CRUD jadwal dokter |
+| GET/POST/PUT/DELETE | `/api/shifts` | CRUD shift staf |
+| GET | `/api/icd10/search` | Cari diagnosis ICD-10 |
+| GET | `/api/icd9/search` | Cari tindakan ICD-9 |
 
-### General Notes
-- **Creating New Modules**: To add a new module, create a new directory under `app/Modules/` containing the respective `Controllers`, `Views`, and `Models`. The namespace is automatically detected via `app/Config/Autoload.php`.
-- **Asset Referencing**: Always utilize the `base_url()` helper function when calling static assets to ensure link validity across different environments and Docker setups.
+### Apoteker
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET/POST | `/api/drugs` | List / Create obat |
+| GET | `/api/drugs/detail` | Detail stok obat |
+| GET | `/api/drugs/low-stock` | Obat stok menipis |
+| GET/PUT/DELETE | `/api/drugs/{id}` | Get / Update / Delete obat |
+| GET/POST/PUT/DELETE | `/api/prescriptions` | CRUD resep |
+| GET/POST | `/api/prescription-items` | Item resep |
 
-## Troubleshooting
+### Kasir
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET/POST | `/api/payments` | List / Create tagihan |
+| PUT/DELETE | `/api/payments/{id}` | Update (bayar) / Delete |
+| GET | `/api/midtrans/status/{order}` | Cek status Midtrans |
+| POST | `/api/midtrans/snap` | Buat Snap Midtrans |
+| POST | `/api/midtrans/webhook` | Webhook Midtrans |
 
-### 1. Writable Directory Permission Denied
-If you encounter permission errors regarding the `writable` directory, adjust the ownership from within the host or container:
-```bash
-# Host Machine (Mac/Linux)
-chmod -R 777 writable
+## Fitur Unggulan
 
-# Or inside the Docker Container
-docker exec -it web-lanjut-app-1 chown -R www-data:www-data writable
-```
+### Sistem Antrean dengan Loket (Counter)
+- 3 loket real-time (Loket 1, 2, 3) dengan status **Tersedia** / **Sibuk**
+- Klik **Panggil** → auto-assign ke loket tersedia → countdown 10 detik → auto **Selesai**
+- Tampilan monitor loket dengan animasi pulse, progress bar, dan polling 3 detik
+- Data tersimpan di kolom `loket` tabel `queues`
 
-### 2. Port Conflict (9092)
-If port `9092` is already bound to another service on your host machine, modify the port mapping in the `docker-compose.yml` file:
+### JavaScript Fetch()
+Semua view sudah terhubung ke API endpoint via `fetch()` tanpa mengubah HTML template — data dimuat dinamis dari backend.
+
+## Docker
+
 ```yaml
-ports:
-  - "9093:80"
+services:
+  app:   php:8.4-apache (port 9092)
+  db:    mysql:8.0 (port 3307)
+  tailwind: node:20-alpine (profile, opsional)
 ```
 
-### 3. Tailwind Recompilation Issues
-If the CSS does not update, ensure the `tailwind` service is running in Docker:
+Tailwind hanya jalan saat `docker compose --profile tailwind up -d`.
+
+## Development
+
 ```bash
-docker compose ps
+# Masuk container
+docker compose exec app bash
+
+# Run migration (jika perlu)
+php spark migrate
+
+# Build CSS (manual)
+docker compose --profile tailwind up -d
 ```
-If it's down, restart it: `docker compose up -d tailwind`.
-
-## Project Documentation
-
-Detailed documentation regarding logic implementation, feature roadmaps, known issues, and testing scenarios have been segregated per module. Please refer to the following documents in the `docs/` directory:
-
-1. [Global Progress & Roadmap](docs/PROGRESS.md)
-2. [Resepsionis Logic (Front Desk)](docs/FEATURE_RESEPSIONIS.md)
-3. [Dokter Logic (Medical Services)](docs/FEATURE_DOKTER.md)
-4. [Apoteker Logic (Pharmacy & Inventory)](docs/FEATURE_APOTEKER.md)
-5. [Kasir Logic (Billing & Payment)](docs/FEATURE_KASIR.md)
-6. [Core Logic (Authentication, Reports, Settings)](docs/FEATURE_CORE.md)
