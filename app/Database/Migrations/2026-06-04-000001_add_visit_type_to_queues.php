@@ -8,9 +8,11 @@ class AddVisitTypeToQueues extends Migration
 {
     public function up()
     {
-        $this->forge->addColumn('queues', [
-            'visit_type' => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true, 'default' => 'rawat_jalan', 'after' => 'poli'],
-        ]);
+        if (!$this->db->fieldExists('visit_type', 'queues')) {
+            $this->forge->addColumn('queues', [
+                'visit_type' => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true, 'default' => 'rawat_jalan', 'after' => 'poli'],
+            ]);
+        }
     }
 
     public function down()

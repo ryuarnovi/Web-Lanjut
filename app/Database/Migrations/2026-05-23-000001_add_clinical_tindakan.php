@@ -9,30 +9,34 @@ class AddClinicalTindakan extends Migration
     public function up()
     {
         // Add icd9_code and tindakan_fee to medical_records
-        $this->forge->addColumn('medical_records', [
-            'icd9_code' => [
-                'type' => 'VARCHAR',
-                'constraint' => 20,
-                'null' => true,
-                'after' => 'icd_code'
-            ],
-            'tindakan_fee' => [
-                'type' => 'DECIMAL',
-                'constraint' => '15,2',
-                'default' => 0.00,
-                'after' => 'icd9_code'
-            ],
-        ]);
+        if (!$this->db->fieldExists('icd9_code', 'medical_records')) {
+            $this->forge->addColumn('medical_records', [
+                'icd9_code' => [
+                    'type' => 'VARCHAR',
+                    'constraint' => 20,
+                    'null' => true,
+                    'after' => 'icd_code'
+                ],
+                'tindakan_fee' => [
+                    'type' => 'DECIMAL',
+                    'constraint' => '15,2',
+                    'default' => 0.00,
+                    'after' => 'icd9_code'
+                ],
+            ]);
+        }
 
         // Add tindakan_fee to payments
-        $this->forge->addColumn('payments', [
-            'tindakan_fee' => [
-                'type' => 'DECIMAL',
-                'constraint' => '15,2',
-                'default' => 0.00,
-                'after' => 'doctor_fee'
-            ],
-        ]);
+        if (!$this->db->fieldExists('tindakan_fee', 'payments')) {
+            $this->forge->addColumn('payments', [
+                'tindakan_fee' => [
+                    'type' => 'DECIMAL',
+                    'constraint' => '15,2',
+                    'default' => 0.00,
+                    'after' => 'doctor_fee'
+                ],
+            ]);
+        }
     }
 
     public function down()

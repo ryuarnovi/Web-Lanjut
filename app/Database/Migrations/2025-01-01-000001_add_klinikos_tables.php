@@ -8,17 +8,29 @@ class AddKlinikosTables extends Migration
 {
     public function up()
     {
-        // Add profile_picture_url to users
-        $this->forge->addColumn('users', [
-            'profile_picture_url' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true, 'after' => 'is_active'],
-        ]);
+        // Add profile_picture_url to users (if not exists)
+        if (!$this->db->fieldExists('profile_picture_url', 'users')) {
+            $this->forge->addColumn('users', [
+                'profile_picture_url' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true, 'after' => 'is_active'],
+            ]);
+        }
 
-        // Add doctor_id, nurse_id, loket to queues
-        $this->forge->addColumn('queues', [
-            'doctor_id' => ['type' => 'INT', 'constraint' => 11, 'null' => true, 'after' => 'created_by'],
-            'nurse_id'  => ['type' => 'INT', 'constraint' => 11, 'null' => true, 'after' => 'doctor_id'],
-            'loket'     => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true, 'after' => 'nurse_id'],
-        ]);
+        // Add doctor_id, nurse_id, loket to queues (if not exists)
+        if (!$this->db->fieldExists('doctor_id', 'queues')) {
+            $this->forge->addColumn('queues', [
+                'doctor_id' => ['type' => 'INT', 'constraint' => 11, 'null' => true, 'after' => 'created_by'],
+            ]);
+        }
+        if (!$this->db->fieldExists('nurse_id', 'queues')) {
+            $this->forge->addColumn('queues', [
+                'nurse_id'  => ['type' => 'INT', 'constraint' => 11, 'null' => true, 'after' => 'doctor_id'],
+            ]);
+        }
+        if (!$this->db->fieldExists('loket', 'queues')) {
+            $this->forge->addColumn('queues', [
+                'loket'     => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true, 'after' => 'nurse_id'],
+            ]);
+        }
 
         // doctor_schedules table
         $this->forge->addField([

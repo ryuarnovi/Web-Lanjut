@@ -115,9 +115,9 @@
                 </div>
               </div>
               <div class="flex items-center gap-2">
-                <input type="time" class="form-input py-1.5 w-auto" value="09:00">
+                <input type="time" class="form-input py-1.5 w-auto jam-buka" value="09:00">
                 <span class="text-slate-400">-</span>
-                <input type="time" class="form-input py-1.5 w-auto" value="15:00">
+                <input type="time" class="form-input py-1.5 w-auto jam-tutup" value="15:00">
               </div>
             </div>
 
@@ -139,7 +139,7 @@
           </div>
           
           <div class="pt-6 flex justify-end">
-            <button type="button" class="btn btn-primary shadow-sm">Simpan Jadwal</button>
+            <button type="button" id="btnSimpanJadwal" class="btn btn-primary shadow-sm">Simpan Jadwal</button>
           </div>
         </div>
 
@@ -192,15 +192,15 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="form-label text-xs">Client Key</label>
-                  <input type="text" class="form-input text-sm font-mono" value="SB-Mid-client-A1B2C3D4E5F6G7H8">
+                  <input type="text" id="midtrans-client-key" class="form-input text-sm font-mono" placeholder="Masukkan Client Key Midtrans">
                 </div>
                 <div>
                   <label class="form-label text-xs">Server Key</label>
-                  <input type="password" class="form-input text-sm font-mono" value="SB-Mid-server-Z9Y8X7W6V5U4T3S2">
+                  <input type="password" id="midtrans-server-key" class="form-input text-sm font-mono" placeholder="Masukkan Server Key Midtrans">
                 </div>
                 <div class="md:col-span-2">
                   <label class="form-label text-xs">Environment</label>
-                  <select class="form-select text-sm">
+                  <select id="midtrans-environment" class="form-select text-sm">
                     <option value="sandbox" selected>Sandbox (Testing)</option>
                     <option value="production">Production (Live)</option>
                   </select>
@@ -228,7 +228,7 @@
             </div>
 
             <div class="pt-2 flex justify-end">
-              <button type="button" class="btn btn-primary shadow-sm">Simpan API Key</button>
+              <button type="button" id="btnSimpanMidtrans" class="btn btn-primary shadow-sm">Simpan API Key</button>
             </div>
           </form>
         </div>
@@ -255,8 +255,14 @@ async function loadSettings() {
             if (parts[0]) jamInputs[0].value = parts[0];
             if (parts[1]) jamInputs[1].value = parts[1];
         }
-        if (s.midtrans_client_key) document.querySelector('input[value*="SB-Mid-client"]').value = s.midtrans_client_key;
-        if (s.midtrans_server_key) document.querySelector('input[value*="SB-Mid-server"]').value = s.midtrans_server_key;
+        if (s.jam_buka_sabtu && jamInputs.length >= 4) {
+            const parts = s.jam_buka_sabtu.split(' - ');
+            if (parts[0]) jamInputs[2].value = parts[0];
+            if (parts[1]) jamInputs[3].value = parts[1];
+        }
+        if (s.midtrans_client_key) document.getElementById('midtrans-client-key').value = s.midtrans_client_key;
+        if (s.midtrans_server_key) document.getElementById('midtrans-server-key').value = s.midtrans_server_key;
+        if (s.midtrans_environment) document.getElementById('midtrans-environment').value = s.midtrans_environment;
     } catch(e) {}
 }
 
@@ -273,6 +279,35 @@ document.getElementById('btnSimpanInfo')?.addEventListener('click', async functi
         const json = await res.json();
         alert(json.message || 'Disimpan');
     } catch(e) { alert('Gagal menyimpan'); }
+});
+
+document.getElementById('btnSimpanJadwal')?.addEventListener('click', async function() {
+    const jamInputs = document.querySelectorAll('.jam-buka, .jam-tutup');
+    const data = {};
+    if (jamInputs.length >= 2) {
+        data.jam_buka_senin_jumat = (jamInputs[0]?.value || '08:00') + ' - ' + (jamInputs[1]?.value || '21:00');
+    }
+    if (jamInputs.length >= 4) {
+        data.jam_buka_sabtu = (jamInputs[2]?.value || '09:00') + ' - ' + (jamInputs[3]?.value || '15:00');
+    }
+    try {
+        const res = await fetch('/api/settings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+        const json = await res.json();
+        alert(json.message || 'Jadwal disimpan');
+    } catch(e) { alert('Gagal menyimpan jadwal'); }
+});
+
+document.getElementById('btnSimpanMidtrans')?.addEventListener('click', async function() {
+    const data = {
+        midtrans_client_key: document.getElementById('midtrans-client-key').value,
+        midtrans_server_key: document.getElementById('midtrans-server-key').value,
+        midtrans_environment: document.getElementById('midtrans-environment').value,
+    };
+    try {
+        const res = await fetch('/api/settings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+        const json = await res.json();
+        alert(json.message || 'API Key disimpan');
+    } catch(e) { alert('Gagal menyimpan API Key'); }
 });
 
 document.addEventListener('DOMContentLoaded', loadSettings);

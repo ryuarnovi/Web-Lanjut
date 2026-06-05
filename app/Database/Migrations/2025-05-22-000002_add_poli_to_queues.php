@@ -8,9 +8,11 @@ class AddPoliToQueues extends Migration
 {
     public function up()
     {
-        $this->forge->addColumn('queues', [
-            'poli' => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true, 'after' => 'loket'],
-        ]);
+        if (!$this->db->fieldExists('poli', 'queues')) {
+            $this->forge->addColumn('queues', [
+                'poli' => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true, 'after' => 'loket'],
+            ]);
+        }
     }
 
     public function down()

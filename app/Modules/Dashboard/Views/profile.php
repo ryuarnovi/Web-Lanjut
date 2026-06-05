@@ -17,8 +17,9 @@
     <div class="card">
       <div class="card-body text-center pt-8">
         <div class="relative inline-block mb-4">
-          <img src="<?= base_url() ?>NiceAdmin/assets/img/profile-img.jpg" alt="Profile" class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md mx-auto">
-          <button class="absolute bottom-0 right-0 bg-klinik-primary text-white p-2 rounded-full hover:bg-klinik-dark transition shadow-md">
+          <img id="profile-avatar" src="<?= base_url() ?>NiceAdmin/assets/img/profile-img.jpg" alt="Profile" class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md mx-auto">
+          <input type="file" id="photo-input" accept="image/*" class="hidden">
+          <button id="btn-upload-photo" class="absolute bottom-0 right-0 bg-klinik-primary text-white p-2 rounded-full hover:bg-klinik-dark transition shadow-md" type="button">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10V4h6l12 12-6 6L3 10zM17 5l2 2" /></svg>
           </button>
         </div>
@@ -167,7 +168,10 @@ async function loadProfileData() {
         const u = userJson.data || userJson.user || userJson;
         const s = setJson.data || {};
         if (u) {
-            const nama = u.name || u.nama || u.full_name || u.username || '-';
+            const nama = u.full_name || u.name || u.nama || u.username || '-';
+            if (u.profile_picture_url) {
+                document.getElementById('profile-avatar').src = u.profile_picture_url;
+            }
             const email = u.email || '-';
             const phone = u.phone || u.telp || u.telepon || '-';
             const company = s.nama_klinik || 'KlinikOS 2.0 Medical Center';
@@ -200,28 +204,62 @@ async function loadProfileData() {
         }
     } catch(e) {}
 }
+document.getElementById('btn-upload-photo')?.addEventListener('click', () => document.getElementById('photo-input')?.click());
+document.getElementById('photo-input')?.addEventListener('change', async function() {
+    const file = this.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+        const res = await fetch('/api/users/me/photo', { method:'POST', body: formData });
+        const json = await res.json();
+        if (res.ok) {
+            document.getElementById('profile-avatar').src = json.url || URL.createObjectURL(file);
+            alert('Foto profil berhasil diperbarui');
+        } else {
+            alert(json.error || 'Gagal mengupload foto');
+        }
+    } catch(e) { alert('Gagal terhubung ke server'); }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     loadProfileData();
     document.querySelector('#edit-profile form')?.addEventListener('submit', async function(e) {
         e.preventDefault();
-        const data = { name: this.querySelector('input[type="text"]')?.value || '', email: this.querySelector('input[type="email"]')?.value || '' };
+        const form = this;
+        const inputs = form.querySelectorAll('input');
+        const labels = form.querySelectorAll('.form-label');
+        const getName = () => { for (let i = 0; i < labels.length; i++) { if (labels[i].textContent.includes('Nama')) return inputs[i]?.value; } return inputs[0]?.value; };
+        const getEmail = () => { for (let i = 0; i < labels.length; i++) { if (labels[i].textContent.includes('Email')) return inputs[i]?.value; } return inputs[inputs.length-1]?.value; };
+        const getPhone = () => { for (let i = 0; i < labels.length; i++) { if (labels[i].textContent.includes('Telepon')) return inputs[i]?.value; } return ''; };
+        const data = {
+            full_name: getName(),
+            email: getEmail(),
+            phone: getPhone()
+        };
         try {
             const res = await fetch('/api/users/me', { method:'POST', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify(data) });
             const json = await res.json();
             alert(json.message || 'Profil berhasil diperbarui');
+            location.reload();
         } catch(e) { alert('Gagal'); }
     });
     document.querySelector('#change-password form')?.addEventListener('submit', async function(e) {
         e.preventDefault();
         const inputs = this.querySelectorAll('input[type="password"]');
-        const data = { password_lama: inputs[0]?.value || '', password_baru: inputs[1]?.value || '', password_konfirmasi: inputs[2]?.value || '' };
-        if (data.password_baru !== data.password_konfirmasi) return alert('Password baru tidak cocok');
+        const currentPassword = inputs[0]?.value || '';
+        const newPassword = inputs[1]?.value || '';
+        const confirmPassword = inputs[2]?.value || '';
+        if (!currentPassword) return alert('Password saat ini wajib diisi');
+        if (newPassword.length < 6) return alert('Password baru minimal 6 karakter');
+        if (newPassword !== confirmPassword) return alert('Password baru tidak cocok');
         try {
-            const res = await fetch('/api/users/me', { method:'POST', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify(data) });
+            const res = await fetch('/api/users/me', { method:'POST', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, body: JSON.stringify({ current_password: currentPassword, password: newPassword }) });
             const json = await res.json();
+            if (!res.ok) return alert(json.error || 'Gagal mengubah password');
             alert(json.message || 'Password berhasil diubah');
             this.reset();
-        } catch(e) { alert('Gagal'); }
+        } catch(e) { alert('Gagal terhubung ke server'); }
     });
 });
 </script>

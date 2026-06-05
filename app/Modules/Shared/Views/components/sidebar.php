@@ -88,11 +88,26 @@
         <div id="nav-mod-kasir" class="nav-sub <?= str_contains(uri_string(), 'kasir') ? 'open' : '' ?>">
           <a href="<?= base_url('kasir/data') ?>" class="<?= uri_string() == 'kasir/data' ? 'active' : '' ?>">Daftar Tagihan</a>
           <a href="<?= base_url('kasir/billing') ?>" class="<?= uri_string() == 'kasir/billing' ? 'active' : '' ?>">Proses Pembayaran</a>
+          <a href="<?= base_url('kasir/riwayat') ?>" class="<?= uri_string() == 'kasir/riwayat' ? 'active' : '' ?>">Riwayat Transaksi</a>
         </div>
       </li>
       <?php endif; ?>
 
       <li class="nav-heading">Akun & Sistem</li>
+      <?php if ($role === 'admin'): ?>
+      <li class="nav-item">
+        <a class="nav-link <?= (uri_string() == 'dashboard/users') ? 'active' : '' ?>" href="<?= base_url('dashboard/users') ?>">
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+          <span>Manajemen User</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link <?= (uri_string() == 'dashboard/logs') ? 'active' : '' ?>" href="<?= base_url('dashboard/logs') ?>">
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+          <span>Log Aktivitas</span>
+        </a>
+      </li>
+      <?php endif; ?>
       <li class="nav-item">
         <a class="nav-link <?= (uri_string() == 'profile') ? 'active' : '' ?>" href="<?= base_url('profile') ?>">
           <svg xmlns="http://www.w3.org/2000/svg" class="icon h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
