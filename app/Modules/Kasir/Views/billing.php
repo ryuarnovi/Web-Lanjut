@@ -24,7 +24,9 @@
   .back-to-top,
   .btn,
   .card-title .badge,
-  .payment-actions {
+  .payment-actions,
+  .toast-container,
+  .toast-box {
     display: none !important;
   }
   .admin-main {
@@ -534,8 +536,9 @@ async function checkoutPayment() {
             const json = await res.json();
             if (res.ok) {
                 window.showToast('Pembayaran Berhasil Diselesaikan!', 'success');
-                // Trigger print
+                // Trigger print — clean up toasts first so they don't show on paper
                 setTimeout(() => {
+                    document.querySelectorAll('.toast-container, .toast-box').forEach(el => el.remove());
                     window.print();
                     window.location.href = '<?= base_url("kasir/data") ?>';
                 }, 500);
