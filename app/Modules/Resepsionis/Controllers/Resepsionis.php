@@ -159,7 +159,7 @@ class Resepsionis extends BaseController
             $sql .= " LEFT JOIN queues q ON p.id = q.patient_id LEFT JOIN medical_records mr ON p.id = mr.patient_id WHERE q.doctor_id = ? OR mr.doctor_id = ?";
             $params[] = $userID;
             $params[] = $userID;
-        } elseif ($role === 'perawat') {
+        } elseif ($role === 'perawat' && !$all) {
             $sql .= " JOIN queues q ON p.id = q.patient_id WHERE q.nurse_id = ?";
             $params[] = $userID;
         }
