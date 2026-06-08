@@ -230,6 +230,18 @@ class Auth extends BaseController
         // Don't allow changing role or is_active from profile
         unset($input['role'], $input['is_active']);
 
+        // Verify current password if attempting to change password
+        if (!empty($input['password'])) {
+            $user = $this->db->query("SELECT password_hash FROM users WHERE id = ?", [$userID])->getRowArray();
+            $currentPassword = $input['current_password'] ?? '';
+            if (empty($currentPassword) || !password_verify($currentPassword, $user['password_hash'] ?? '')) {
+                return $this->response->setStatusCode(403)->setJSON(['error' => 'Password saat ini salah']);
+            }
+            if (strlen($input['password']) < 6) {
+                return $this->response->setStatusCode(400)->setJSON(['error' => 'Password baru minimal 6 karakter']);
+            }
+        }
+
         $set = [];
         $params = [];
 
@@ -249,9 +261,6 @@ class Auth extends BaseController
             $params[] = $input['phone'];
         }
         if (!empty($input['password'])) {
-            if (strlen($input['password']) < 6) {
-                return $this->response->setStatusCode(400)->setJSON(['error' => 'Password too short']);
-            }
             $set[] = "password_hash = ?";
             $params[] = password_hash($input['password'], PASSWORD_BCRYPT);
         }

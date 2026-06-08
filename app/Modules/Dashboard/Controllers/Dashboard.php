@@ -13,6 +13,8 @@ class Dashboard extends BaseController
         $this->db = \Config\Database::connect();
     }
 
+    // ============ VIEW METHODS ============
+
     public function index()
     {
         return view('Modules\Dashboard\Views\home', ['title' => 'Executive Dashboard - KlinikOS 2.0']);
@@ -32,6 +34,18 @@ class Dashboard extends BaseController
     {
         return view('Modules\Dashboard\Views\pengaturan', ['title' => 'System Settings - KlinikOS 2.0']);
     }
+
+    public function users()
+    {
+        return view('Modules\Dashboard\Views\users', ['title' => 'Manajemen User - KlinikOS 2.0']);
+    }
+
+    public function logs()
+    {
+        return view('Modules\Dashboard\Views\logs', ['title' => 'Log Aktivitas - KlinikOS 2.0']);
+    }
+
+    // ============ SETTINGS API ============
 
     public function getSettings()
     {
@@ -61,20 +75,96 @@ class Dashboard extends BaseController
         return $this->response->setJSON(['message' => 'Settings saved']);
     }
 
+    // ============ DASHBOARD STATS API (upgraded) ============
+
     public function getDashboardStats()
     {
-        $todayQueues = $this->db->query("SELECT COUNT(*) as c FROM queues WHERE queue_date = CURDATE()")->getRow()->c;
-        $totalPasien = $this->db->query("SELECT COUNT(*) as c FROM patients")->getRow()->c;
-        $waitingQueues = $this->db->query("SELECT COUNT(*) as c FROM queues WHERE status = 'waiting'")->getRow()->c;
-        $todayRevenue = $this->db->query("SELECT COALESCE(SUM(total_amount),0) as total FROM payments WHERE DATE(payment_date) = CURDATE() AND status = 'paid'")->getRow()->total;
+        $today = date('Y-m-d');
 
-        return $this->response->setJSON([
-            'data' => [
-                'kunjungan' => (int) $todayQueues,
-                'total_pasien' => (int) $totalPasien,
-                'antrean' => (int) $waitingQueues,
-                'pendapatan' => (int) $todayRevenue,
-            ]
-        ]);
+        $stats = [
+            'total_patients'  => $this->safeCount('patients'),
+            'total_doctors'   => $this->safeCount('users', ['role' => 'dokter', 'is_active' => 1]),
+            'total_drugs'     => $this->safeCount('drugs'),
+            'queue_today'     => $this->safeCount('queues', ['queue_date' => $today]),
+            'low_stock_drugs' => 0,
+            'revenue_today'   => 0,
+            // Legacy keys for existing home.php compatibility
+            'kunjungan'       => $this->safeCount('queues', ['queue_date' => $today]),
+            'total_pasien'    => $this->safeCount('patients'),
+            'antrean'         => $this->safeCount('queues', ['status' => 'waiting']),
+            'pendapatan'      => 0,
+        ];
+
+        try {
+            $stats['low_stock_drugs'] = (int) $this->db->query(
+                "SELECT COUNT(*) as c FROM drugs WHERE stok_obat <= min_stock"
+            )->getRow()->c;
+        } catch (\Throwable $e) {}
+
+        try {
+            $rev = $this->db->query(
+                "SELECT COALESCE(SUM(total_amount), 0) as total FROM payments WHERE DATE(payment_date) = ? AND status = 'paid'",
+                [$today]
+            )->getRow()->total;
+            $stats['revenue_today'] = (float) $rev;
+            $stats['pendapatan'] = (int) $rev;
+        } catch (\Throwable $e) {}
+
+        // 7-day trend data
+        $trend = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $d = date('Y-m-d', strtotime("-$i days"));
+            $visits = $this->safeCount('queues', ['queue_date' => $d]);
+            $rev = 0.0;
+            try {
+                $rev = (float) ($this->db->query(
+                    "SELECT COALESCE(SUM(total_amount), 0) as s FROM payments WHERE DATE(payment_date) = ? AND status = 'paid'",
+                    [$d]
+                )->getRow()->s ?? 0);
+            } catch (\Throwable $e) {}
+            $trend[] = ['date' => $d, 'visits' => $visits, 'revenue' => $rev];
+        }
+        $stats['trend'] = $trend;
+
+        return $this->response->setJSON(['data' => $stats]);
+    }
+
+    // ============ ACTIVITY LOGS API ============
+
+    public function apiLogs()
+    {
+        try {
+            $rows = $this->db->query(
+                "SELECT al.*, u.username, u.full_name as user_name
+                 FROM activity_logs al
+                 LEFT JOIN users u ON u.id = al.user_id
+                 ORDER BY al.created_at DESC
+                 LIMIT 200"
+            )->getResultArray();
+            return $this->response->setJSON(['data' => $rows]);
+        } catch (\Throwable $e) {
+            return $this->response->setJSON(['data' => []]);
+        }
+    }
+
+    // ============ HELPER ============
+
+    private function safeCount(string $table, array $where = []): int
+    {
+        try {
+            $sql = "SELECT COUNT(*) as c FROM $table";
+            $params = [];
+            if (!empty($where)) {
+                $conditions = [];
+                foreach ($where as $col => $val) {
+                    $conditions[] = "$col = ?";
+                    $params[] = $val;
+                }
+                $sql .= " WHERE " . implode(' AND ', $conditions);
+            }
+            return (int) $this->db->query($sql, $params)->getRow()->c;
+        } catch (\Throwable $e) {
+            return 0;
+        }
     }
 }

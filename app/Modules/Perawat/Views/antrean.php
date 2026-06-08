@@ -50,10 +50,10 @@ async function loadQueueTable() {
         const json = await res.json();
         const list = json.data || [];
         tbody.innerHTML = list.length ? list.map(q => {
-            const statusMap = { 'waiting': 'warning', 'called': 'info', 'in_progress': 'primary', 'completed': 'success', 'cancelled': 'danger' };
+            const statusMap = { 'waiting': 'warning', 'called': 'info', 'in_progress': 'primary', 'nurse_call': 'danger', 'completed': 'success', 'cancelled': 'danger' };
             const badge = statusMap[q.status] || 'secondary';
-            const label = q.status === 'waiting' ? 'Menunggu' : q.status === 'called' ? 'Dipanggil' : q.status === 'completed' ? 'Selesai' : q.status;
-            const disabled = q.status !== 'in_progress' && q.status !== 'waiting' ? 'opacity-50 pointer-events-none' : '';
+            const label = q.status === 'waiting' ? 'Menunggu' : q.status === 'called' ? 'Dipanggil' : q.status === 'nurse_call' ? 'Butuh Perawat' : q.status === 'completed' ? 'Selesai' : q.status;
+            const disabled = !['waiting', 'in_progress', 'nurse_call'].includes(q.status) ? 'opacity-50 pointer-events-none' : '';
             const visitLabels = { 'rawat_jalan': 'Rawat Jalan', 'rawat_inap': 'Rawat Inap', 'gawat_darurat': 'IGD', 'kontrol': 'Kontrol', 'rujukan': 'Rujukan' };
             const visitLabel = visitLabels[q.visit_type] || q.visit_type || 'Rawat Jalan';
             return `<tr>

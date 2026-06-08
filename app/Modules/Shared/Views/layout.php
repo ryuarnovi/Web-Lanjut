@@ -155,6 +155,18 @@ if(uri_string()!=""){
   <!-- CDN: Simple DataTables -->
   <script src="https://cdn.jsdelivr.net/npm/simple-datatables@9.0.3/dist/umd/simple-datatables.js"></script>
 
+  <!-- Sidebar Toggle (standalone, runs first) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var btn = document.querySelector('.toggle-sidebar-btn');
+      if (btn) {
+        btn.addEventListener('click', function(e) {
+          document.body.classList.toggle('sidebar-open');
+        });
+      }
+    });
+  </script>
+
   <!-- Main JS — sidebar, dropdown, tabs, collapse -->
   <script>
   (function () {

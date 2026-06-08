@@ -53,10 +53,31 @@
 
   /* ---------- Sidebar ---------- */
   .admin-sidebar {
-    position: fixed; top: 60px; left: 0; bottom: 0; width: 280px;
-    z-index: 40; background: #fff; padding: 20px 0;
+    position: fixed; top: 60px; bottom: 0; width: 280px;
+    background: #fff; padding: 20px 0;
     overflow-y: auto; border-right: 1px solid #eceef1;
-    transition: all 0.3s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 60;
+  }
+  /* Desktop: sidebar starts visible, toggle to hide */
+  @media (min-width: 1025px) {
+    .admin-sidebar { left: 0; }
+    body.sidebar-open .admin-sidebar { left: -280px; box-shadow: none; }
+    body.sidebar-open .admin-main { margin-left: 0; }
+    .admin-main { margin-left: 280px; transition: margin-left 0.3s; }
+    .admin-footer { margin-left: 280px; transition: margin-left 0.3s; }
+    body.sidebar-open .admin-footer { margin-left: 0; }
+  }
+  /* Mobile: sidebar starts hidden, toggle to show */
+  @media (max-width: 1024px) {
+    .admin-sidebar { left: -280px; }
+    body.sidebar-open { overflow: hidden; }
+    body.sidebar-open .admin-sidebar { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
+    body.sidebar-open::before {
+      content: ""; position: fixed; inset: 0; top: 60px;
+      background: rgba(0,0,0,0.3); z-index: 55;
+      backdrop-filter: blur(2px);
+    }
   }
   .admin-sidebar .nav-heading {
     font-size: 0.68rem; text-transform: uppercase; color: #899bbd;
@@ -109,27 +130,11 @@
     transition: all 0.3s;
   }
 
-  /* ---------- Sidebar Toggle & Overlay (All Screens) ---------- */
-  .admin-sidebar {
-    position: fixed; top: 60px; left: -280px; bottom: 0; width: 280px;
-    z-index: 60; background: #fff; padding: 20px 0;
-    overflow-y: auto; border-right: 1px solid #eceef1;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  body.sidebar-open { overflow: hidden; }
-  body.sidebar-open .admin-sidebar { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
-  
-  /* Overlay Backdrop */
-  body.sidebar-open::before {
-    content: ""; position: fixed; inset: 0; top: 60px; background: rgba(0,0,0,0.3); z-index: 55;
-    backdrop-filter: blur(2px);
-  }
-
   @media (max-width: 1024px) {
     .admin-main { padding: 16px; }
     .admin-header .search-bar { display: none; }
   }
+  .toggle-sidebar-btn { cursor: pointer; background: none; border: none; }
 
   /* ---------- Dropdown ---------- */
   .dropdown-panel {

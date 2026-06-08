@@ -211,7 +211,7 @@ async function loadDashboardData() {
                 kunjunganData.push(dayQueues.length);
                 pendapatanData.push(Math.floor(dayQueues.length * (50000 + Math.random() * 100000)));
             }
-            ApexCharts.exec('#reportsChart', 'updateOptions', {
+            reportsChartInstance.updateOptions({
                 series: [{ name: 'Kunjungan', data: kunjunganData }, { name: 'Pendapatan (Rp)', data: pendapatanData }],
                 xaxis: { categories: days }
             });
@@ -237,14 +237,14 @@ async function loadDashboardData() {
 document.addEventListener('DOMContentLoaded', function() {
     // Init charts
     reportsChartInstance = new ApexCharts(document.querySelector("#reportsChart"), {
+        chart: { id: 'reportsChart', height: 350, type: 'area', toolbar: { show: false } },
         series: [{ name: 'Kunjungan', data: [] }, { name: 'Pendapatan (Rp)', data: [] }],
-        chart: { height: 350, type: 'area', toolbar: { show: false } },
         markers: { size: 4 },
         colors: ['#4154f1', '#2eca6a'],
         fill: { type: "gradient", gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.4, stops: [0, 90, 100] } },
         dataLabels: { enabled: false },
         stroke: { curve: 'smooth', width: 2 },
-        xaxis: { type: 'datetime' },
+        xaxis: { categories: [] },
         tooltip: { x: { format: 'dd/MM/yy' } }
     });
     reportsChartInstance.render();

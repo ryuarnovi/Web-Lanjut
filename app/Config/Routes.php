@@ -22,6 +22,8 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     // Dashboard
     $routes->get('/', '\Modules\Dashboard\Controllers\Dashboard::index');
     $routes->get('dashboard', '\Modules\Dashboard\Controllers\Dashboard::index');
+    $routes->get('dashboard/users', '\Modules\Dashboard\Controllers\Dashboard::users');
+    $routes->get('dashboard/logs', '\Modules\Dashboard\Controllers\Dashboard::logs');
 
     // Fitur Umum
     $routes->get('laporan', '\Modules\Dashboard\Controllers\Dashboard::laporan');
@@ -59,6 +61,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('data', '\Modules\Kasir\Controllers\Kasir::data');
         $routes->get('billing', '\Modules\Kasir\Controllers\Kasir::billing');
         $routes->get('form', '\Modules\Kasir\Controllers\Kasir::form');
+        $routes->get('riwayat', '\Modules\Kasir\Controllers\Kasir::riwayat');
     });
 });
 
@@ -80,13 +83,17 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
     $routes->get('drugs', '\Modules\Apoteker\Controllers\Apoteker::listDrugs');
     $routes->get('drugs/detail', '\Modules\Apoteker\Controllers\Apoteker::listDrugsDetail');
     $routes->get('drugs/low-stock', '\Modules\Apoteker\Controllers\Apoteker::lowStockDrugs');
-    $routes->get('drugs/(:any)', '\Modules\Apoteker\Controllers\Apoteker::getDrug/$1');
+    $routes->get('drugs/export', '\Modules\Apoteker\Controllers\Apoteker::exportDrugs');
+    $routes->get('drugs/template', '\Modules\Apoteker\Controllers\Apoteker::downloadTemplate');
+    $routes->post('drugs/import', '\Modules\Apoteker\Controllers\Apoteker::importDrugs');
     $routes->post('drugs', '\Modules\Apoteker\Controllers\Apoteker::createDrug');
     $routes->put('drugs/(:num)', '\Modules\Apoteker\Controllers\Apoteker::updateDrug/$1');
     $routes->delete('drugs/(:num)', '\Modules\Apoteker\Controllers\Apoteker::deleteDrug/$1');
+    $routes->get('drugs/(:any)', '\Modules\Apoteker\Controllers\Apoteker::getDrug/$1');
 
     // Prescriptions API (Apoteker)
     $routes->get('prescriptions', '\Modules\Apoteker\Controllers\Apoteker::listPrescriptions');
+    $routes->get('prescriptions/(:num)', '\Modules\Apoteker\Controllers\Apoteker::getPrescription/$1');
     $routes->post('prescriptions', '\Modules\Apoteker\Controllers\Apoteker::createPrescription');
     $routes->put('prescriptions/(:num)', '\Modules\Apoteker\Controllers\Apoteker::updatePrescription/$1');
     $routes->delete('prescriptions/(:num)', '\Modules\Apoteker\Controllers\Apoteker::deletePrescription/$1');
@@ -174,6 +181,7 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
 
     // Dashboard Stats API
     $routes->get('dashboard/stats', '\Modules\Dashboard\Controllers\Dashboard::getDashboardStats');
+    $routes->get('dashboard/logs', '\Modules\Dashboard\Controllers\Dashboard::apiLogs');
 
     // Lokets API (Resepsionis)
     $routes->get('lokets', '\Modules\Resepsionis\Controllers\Resepsionis::listLokets');
@@ -183,6 +191,7 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
 
     // Suppliers API (Apoteker)
     $routes->get('suppliers', '\Modules\Apoteker\Controllers\Apoteker::listSuppliers');
+    $routes->get('suppliers/(:num)', '\Modules\Apoteker\Controllers\Apoteker::getSupplier/$1');
     $routes->post('suppliers', '\Modules\Apoteker\Controllers\Apoteker::createSupplier');
     $routes->put('suppliers/(:num)', '\Modules\Apoteker\Controllers\Apoteker::updateSupplier/$1');
     $routes->delete('suppliers/(:num)', '\Modules\Apoteker\Controllers\Apoteker::deleteSupplier/$1');
@@ -191,10 +200,6 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
     $routes->get('stock-transactions', '\Modules\Apoteker\Controllers\Apoteker::listStockTransactions');
     $routes->post('stock-transactions', '\Modules\Apoteker\Controllers\Apoteker::createStockTransaction');
 
-    // Import / Export Drugs API (Apoteker)
-    $routes->post('drugs/import', '\Modules\Apoteker\Controllers\Apoteker::importDrugs');
-    $routes->get('drugs/export', '\Modules\Apoteker\Controllers\Apoteker::exportDrugs');
-    $routes->get('drugs/template', '\Modules\Apoteker\Controllers\Apoteker::downloadTemplate');
 });
 
 $routes->get('general', '\Modules\General\Controllers\General::General');

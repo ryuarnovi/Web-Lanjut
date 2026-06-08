@@ -9,6 +9,11 @@ services:
       - /var/www/html/node_modules
     environment:
       - CI_ENVIRONMENT=development
+      - database.default.hostname=db
+      - database.default.port=3306
+      - database.default.database=web_lanjut_db
+      - database.default.username=web_lanjut_user
+      - database.default.password=web_lanjut_pass
     depends_on:
       db:
         condition: service_healthy

@@ -67,7 +67,8 @@ class Apoteker extends BaseController
 
         $id = $this->db->insertID();
         if (!$id) {
-            return $this->response->setStatusCode(500)->setJSON(['error' => 'Gagal membuat obat: ' . $this->db->error()]);
+            $err = $this->db->error();
+            return $this->response->setStatusCode(500)->setJSON(['error' => 'Gagal membuat obat: ' . ($err['message'] ?? 'Unknown error')]);
         }
 
         $this->logActivity('CREATE', 'drugs', $id, 'Membuat obat baru ' . $kodeObat);
@@ -559,9 +560,8 @@ class Apoteker extends BaseController
         $doctorFee = 50000.00;
         $tindakanFee = 0.00;
         if ($medRecID) {
-            $medRec = $this->db->query("SELECT doctor_fee, tindakan_fee FROM medical_records WHERE id = ?", [(int)$medRecID])->getRowArray();
+            $medRec = $this->db->query("SELECT tindakan_fee FROM medical_records WHERE id = ?", [(int)$medRecID])->getRowArray();
             if ($medRec) {
-                $doctorFee = $medRec['doctor_fee'] ?? 50000.00;
                 $tindakanFee = $medRec['tindakan_fee'] ?? 0.00;
             }
         }
@@ -587,6 +587,22 @@ class Apoteker extends BaseController
                 $paymentCode, $patientID, $medRecID, (int)$prescriptionID, $totalAmount, $doctorFee, $tindakanFee, $medicineCost, $adminFee
             ]);
         }
+    }
+
+    public function getPrescription($id)
+    {
+        $query = $this->db->query("SELECT p.*, pt.full_name AS patient_name, u.full_name AS doctor_name
+                                   FROM prescriptions p
+                                   LEFT JOIN patients pt ON p.patient_id = pt.id
+                                   LEFT JOIN users u ON p.doctor_id = u.id
+                                   WHERE p.id = ?", [(int) $id]);
+        $prescription = $query->getRowArray();
+        if (!$prescription) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'Prescription not found']);
+        }
+        $items = $this->db->query("SELECT pi.id, pi.drug_id, d.nama_obat AS drug_name, pi.quantity AS qty, pi.dosage_instruction AS dosage, d.unit FROM prescription_items pi JOIN drugs d ON pi.drug_id = d.id WHERE pi.prescription_id = ?", [(int) $id])->getResultArray();
+        $prescription['items'] = $items;
+        return $this->response->setJSON(['data' => $prescription]);
     }
 
     public function deletePrescription($id)
@@ -658,6 +674,16 @@ class Apoteker extends BaseController
         $this->db->query("UPDATE suppliers SET " . implode(', ', $set) . ", updated_at = NOW() WHERE id = ?", $params);
         $this->logActivity('UPDATE', 'suppliers', (int) $id, 'Memperbarui supplier');
         return $this->response->setJSON(['message' => 'Supplier updated']);
+    }
+
+    public function getSupplier($id)
+    {
+        $query = $this->db->query("SELECT * FROM suppliers WHERE id = ?", [(int) $id]);
+        $supplier = $query->getRowArray();
+        if (!$supplier) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'Supplier not found']);
+        }
+        return $this->response->setJSON(['data' => $supplier]);
     }
 
     public function deleteSupplier($id)

@@ -30,6 +30,11 @@ class Kasir extends BaseController
         return view('Modules\Kasir\Views\form', ['title' => 'Buat Tagihan Manual - KlinikOS 2.0']);
     }
 
+    public function riwayat()
+    {
+        return view('Modules\Kasir\Views\riwayat', ['title' => 'Riwayat Transaksi - KlinikOS 2.0']);
+    }
+
     // ============ PAYMENTS API ============
 
     public function createPayment()

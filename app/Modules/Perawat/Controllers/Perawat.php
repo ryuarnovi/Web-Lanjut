@@ -31,6 +31,8 @@ class Perawat extends BaseController
     public function listQueues()
     {
         $status = $this->request->getGet('status');
+        $userID = session()->get('user_id');
+        $role = strtolower(session()->get('role') ?? '');
         $sql = "SELECT q.*, p.full_name AS patient_name, p.nik, p.gender, p.date_of_birth,
                        (SELECT u.full_name FROM users u WHERE u.id = q.doctor_id) AS doctor_name
                 FROM queues q
@@ -40,6 +42,10 @@ class Perawat extends BaseController
         if ($status) {
             $sql .= " AND q.status = ?";
             $params[] = $status;
+        }
+        if ($role === 'perawat') {
+            $sql .= " AND q.nurse_id = ?";
+            $params[] = $userID;
         }
         $sql .= " ORDER BY q.created_at ASC";
         $query = $this->db->query($sql, $params);
@@ -61,11 +67,13 @@ class Perawat extends BaseController
         $input = $this->request->getJSON(true);
         $set = [];
         $params = [];
-        if (isset($input['status'])) { $set[] = "status = ?"; $params[] = $input['status']; }
+        if (isset($input['status'])) {
+            $set[] = "status = ?"; $params[] = $input['status'];
+            if ($input['status'] === 'called') { $set[] = "called_at = NOW()"; }
+            if ($input['status'] === 'completed') { $set[] = "completed_at = NOW()"; }
+        }
         if (isset($input['loket'])) { $set[] = "loket = ?"; $params[] = $input['loket']; }
         if (isset($input['nurse_id'])) { $set[] = "nurse_id = ?"; $params[] = (int) $input['nurse_id']; }
-        if ($input['status'] === 'called') { $set[] = "called_at = NOW()"; }
-        if ($input['status'] === 'completed') { $set[] = "completed_at = NOW()"; }
         if (empty($set)) return $this->response->setStatusCode(400)->setJSON(['error' => 'No data to update']);
         $params[] = (int) $id;
         $this->db->query("UPDATE queues SET " . implode(', ', $set) . " WHERE id = ?", $params);

@@ -10,7 +10,7 @@
                 <span class="text-xs text-slate-500 font-medium hidden md:block">Sistem Klinik Modern</span>
             </div>
         </a>
-      <button class="toggle-sidebar-btn p-2 rounded-lg hover:bg-slate-100 transition cursor-pointer">
+      <button class="toggle-sidebar-btn p-2 rounded-lg hover:bg-slate-100 transition cursor-pointer" onclick="document.body.classList.toggle('sidebar-open')" type="button">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-klinik-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
