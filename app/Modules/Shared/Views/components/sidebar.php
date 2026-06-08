@@ -87,7 +87,6 @@
         </button>
         <div id="nav-mod-kasir" class="nav-sub <?= str_contains(uri_string(), 'kasir') ? 'open' : '' ?>">
           <a href="<?= base_url('kasir/data') ?>" class="<?= uri_string() == 'kasir/data' ? 'active' : '' ?>">Daftar Tagihan</a>
-          <a href="<?= base_url('kasir/billing') ?>" class="<?= uri_string() == 'kasir/billing' ? 'active' : '' ?>">Proses Pembayaran</a>
           <a href="<?= base_url('kasir/riwayat') ?>" class="<?= uri_string() == 'kasir/riwayat' ? 'active' : '' ?>">Riwayat Transaksi</a>
         </div>
       </li>
