@@ -59,7 +59,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     // Kasir
     $routes->group('kasir', ['filter' => 'auth:admin,kasir'], function ($routes) {
         $routes->get('data', '\Modules\Kasir\Controllers\Kasir::data');
-        $routes->get('billing', '\Modules\Kasir\Controllers\Kasir::billing');
+        // $routes->get('billing', '\Modules\Kasir\Controllers\Kasir::billing');
         $routes->get('form', '\Modules\Kasir\Controllers\Kasir::form');
         $routes->get('riwayat', '\Modules\Kasir\Controllers\Kasir::riwayat');
     });
