@@ -67,7 +67,8 @@ class Apoteker extends BaseController
 
         $id = $this->db->insertID();
         if (!$id) {
-            return $this->response->setStatusCode(500)->setJSON(['error' => 'Gagal membuat obat: ' . $this->db->error()]);
+            $err = $this->db->error();
+            return $this->response->setStatusCode(500)->setJSON(['error' => 'Gagal membuat obat: ' . ($err['message'] ?? 'Unknown error')]);
         }
 
         $this->logActivity('CREATE', 'drugs', $id, 'Membuat obat baru ' . $kodeObat);
@@ -559,9 +560,8 @@ class Apoteker extends BaseController
         $doctorFee = 50000.00;
         $tindakanFee = 0.00;
         if ($medRecID) {
-            $medRec = $this->db->query("SELECT doctor_fee, tindakan_fee FROM medical_records WHERE id = ?", [(int)$medRecID])->getRowArray();
+            $medRec = $this->db->query("SELECT tindakan_fee FROM medical_records WHERE id = ?", [(int)$medRecID])->getRowArray();
             if ($medRec) {
-                $doctorFee = $medRec['doctor_fee'] ?? 50000.00;
                 $tindakanFee = $medRec['tindakan_fee'] ?? 0.00;
             }
         }

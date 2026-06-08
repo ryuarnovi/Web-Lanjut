@@ -70,7 +70,7 @@ async function detailResep(id) {
         const res = await fetch('/api/prescriptions');
         const json = await res.json();
         const list = json.data || [];
-        const r = list.find(p => p.id === id);
+        const r = list.find(p => parseInt(p.id) === parseInt(id));
         if (!r) return alert('Data tidak ditemukan');
         const items = r.items || [];
         const container = document.getElementById('detailResepModal');

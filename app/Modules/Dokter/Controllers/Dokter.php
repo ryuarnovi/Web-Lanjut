@@ -177,17 +177,23 @@ class Dokter extends BaseController
         $queueID = !empty($input['queue_id']) ? (int) $input['queue_id'] : null;
         $doctorID = $input['doctor_id'] ?? session()->get('user_id');
 
-        $this->db->query("INSERT INTO medical_records (patient_id, queue_id, doctor_id, visit_date, subjective, objective, assessment, plan, vital_signs, icd_code, icd9_code, tindakan_fee, doctor_fee, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())", [
+        $this->db->query("INSERT INTO medical_records (patient_id, queue_id, doctor_id, visit_date, subjective, objective, assessment, plan, vital_signs, icd_code, icd9_code, tindakan_fee, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())", [
             $patientID, $queueID, $doctorID, $visitDate,
             $subjective, $input['objective'] ?? null, $assessment,
             $input['plan'] ?? null, $input['vital_signs'] ?? null, $input['icd_code'] ?? null,
-            $input['icd9_code'] ?? null, $input['tindakan_fee'] ?? 0.00, $input['doctor_fee'] ?? 50000.00,
+            $input['icd9_code'] ?? null, $input['tindakan_fee'] ?? 0.00,
         ]);
 
         $id = $this->db->insertID();
 
         if ($queueID) {
-            $this->db->query("UPDATE queues SET status = 'completed', completed_at = NOW() WHERE id = ?", [$queueID]);
+            $queue = $this->db->query("SELECT visit_type FROM queues WHERE id = ?", [$queueID])->getRowArray();
+            $visitType = $queue['visit_type'] ?? 'rawat_jalan';
+            if ($visitType !== 'rawat_jalan') {
+                $this->db->query("UPDATE queues SET status = 'nurse_call' WHERE id = ?", [$queueID]);
+            } else {
+                $this->db->query("UPDATE queues SET status = 'completed', completed_at = NOW() WHERE id = ?", [$queueID]);
+            }
         }
 
         // Sync payment invoice for this medical record
@@ -210,10 +216,9 @@ class Dokter extends BaseController
         if (isset($input['icd_code'])) $fields['icd_code'] = $input['icd_code'];
         if (isset($input['icd9_code'])) $fields['icd9_code'] = $input['icd9_code'];
         if (isset($input['tindakan_fee'])) $fields['tindakan_fee'] = $input['tindakan_fee'];
-        if (isset($input['doctor_fee'])) $fields['doctor_fee'] = $input['doctor_fee'];
 
         if (empty($fields)) {
-            return $this->response->setJSON(['message' => 'Medical record updated']);
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'No data to update']);
         }
 
         $set = [];
@@ -234,7 +239,7 @@ class Dokter extends BaseController
         $userID = session()->get('user_id');
         $role = strtolower(session()->get('role') ?? '');
 
-        $sql = "SELECT mr.id, mr.patient_id, mr.queue_id, mr.doctor_id, mr.visit_date, mr.subjective, mr.objective, mr.assessment, mr.plan, mr.vital_signs, mr.icd_code, mr.icd9_code, mr.tindakan_fee, mr.doctor_fee, mr.created_at, mr.updated_at, p.full_name as patient_name, q.queue_number, q.queue_date, q.status as queue_status, u.full_name as doctor_name FROM medical_records mr LEFT JOIN patients p ON mr.patient_id = p.id LEFT JOIN queues q ON mr.queue_id = q.id LEFT JOIN users u ON mr.doctor_id = u.id WHERE 1=1";
+        $sql = "SELECT mr.id, mr.patient_id, mr.queue_id, mr.doctor_id, mr.visit_date, mr.subjective, mr.objective, mr.assessment, mr.plan, mr.vital_signs, mr.icd_code, mr.icd9_code, mr.tindakan_fee, mr.created_at, mr.updated_at, p.full_name as patient_name, q.queue_number, q.queue_date, q.status as queue_status, u.full_name as doctor_name FROM medical_records mr LEFT JOIN patients p ON mr.patient_id = p.id LEFT JOIN queues q ON mr.queue_id = q.id LEFT JOIN users u ON mr.doctor_id = u.id WHERE 1=1";
         $params = [];
 
         if ($role === 'dokter') {
@@ -252,7 +257,7 @@ class Dokter extends BaseController
 
     public function getMedicalRecord($id)
     {
-        $query = $this->db->query("SELECT mr.id, mr.patient_id, mr.queue_id, mr.doctor_id, mr.visit_date, mr.subjective, mr.objective, mr.assessment, mr.plan, mr.vital_signs, mr.icd_code, mr.icd9_code, mr.tindakan_fee, mr.doctor_fee, mr.created_at, mr.updated_at, p.full_name as patient_name, q.queue_number, q.queue_date, q.status as queue_status, u.full_name as doctor_name FROM medical_records mr LEFT JOIN patients p ON mr.patient_id = p.id LEFT JOIN queues q ON mr.queue_id = q.id LEFT JOIN users u ON mr.doctor_id = u.id WHERE mr.id = ?", [(int) $id]);
+        $query = $this->db->query("SELECT mr.id, mr.patient_id, mr.queue_id, mr.doctor_id, mr.visit_date, mr.subjective, mr.objective, mr.assessment, mr.plan, mr.vital_signs, mr.icd_code, mr.icd9_code, mr.tindakan_fee, mr.created_at, mr.updated_at, p.full_name as patient_name, q.queue_number, q.queue_date, q.status as queue_status, u.full_name as doctor_name FROM medical_records mr LEFT JOIN patients p ON mr.patient_id = p.id LEFT JOIN queues q ON mr.queue_id = q.id LEFT JOIN users u ON mr.doctor_id = u.id WHERE mr.id = ?", [(int) $id]);
 
         $record = $query->getRowArray();
         if (!$record) {
