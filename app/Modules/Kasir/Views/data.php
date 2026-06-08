@@ -28,19 +28,19 @@
       <!-- Filter / Search Tools -->
       <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
         <div class="flex gap-2 w-full md:w-auto">
-          <select class="form-select w-32">
-            <option value="all">Semua Status</option>
-            <option value="pending">Belum Lunas</option>
+          <select class="form-select w-32" id="filterStatus">
+            <option value="">Semua Status</option>
+            <option value="unpaid">Belum Lunas</option>
             <option value="paid">Lunas</option>
           </select>
-          <input type="date" class="form-input w-40">
         </div>
         
-        <div class="relative w-full md:w-64">
-          <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+        <div class="relative w-full md:w-72" id="patientSearchWrapper">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
           </span>
-          <input type="text" class="form-input pl-9" placeholder="Cari no invoice / nama...">
+          <input type="text" class="form-input pl-9" id="patientSearchInput" placeholder="Cari pasien berdasarkan nama atau NIK..." autocomplete="off">
+          <div id="patientDropdown" class="absolute z-10 w-full bg-white border border-slate-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto" style="display:none"></div>
         </div>
       </div>
 
@@ -52,156 +52,136 @@
               <th>No. Invoice</th>
               <th>Tanggal</th>
               <th>Nama Pasien</th>
-              <th>Poli / Layanan</th>
+              <th>Metode</th>
               <th>Total Tagihan</th>
               <th>Status</th>
               <th class="text-center">Aksi</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200">
-            
-            <!-- Row 1 (Belum Lunas) -->
-            <tr class="hover:bg-slate-50 transition">
-              <td class="font-bold text-klinik-primary">INV-0422001</td>
-              <td class="text-sm text-slate-500">05 Mei 2026<br><span class="text-xs">09:15 WIB</span></td>
-              <td>
-                <div class="font-semibold text-slate-800">Ahmad Subandrio</div>
-                <div class="text-xs text-slate-500">RM-001234</div>
-              </td>
-              <td>Poli Umum</td>
-              <td class="font-bold text-slate-700">Rp 80.000</td>
-              <td><span class="badge badge-warning">Belum Lunas</span></td>
-              <td>
-                <div class="flex justify-center items-center gap-2">
-                  <!-- Bayar / Proses -->
-                  <a href="<?= base_url('kasir/billing') ?>" class="btn btn-sm btn-success p-1.5" title="Proses Pembayaran">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                  </a>
-                  <!-- Edit Data -->
-                  <button class="btn btn-sm btn-outline-primary p-1.5" title="Edit Tagihan">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                  </button>
-                  <!-- Hapus -->
-                  <button class="btn btn-sm btn-outline-danger p-1.5" title="Hapus Tagihan">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-
-            <!-- Row 2 (Lunas) -->
-            <tr class="hover:bg-slate-50 transition">
-              <td class="font-bold text-klinik-primary">INV-0422002</td>
-              <td class="text-sm text-slate-500">05 Mei 2026<br><span class="text-xs">08:30 WIB</span></td>
-              <td>
-                <div class="font-semibold text-slate-800">Siti Aminah</div>
-                <div class="text-xs text-slate-500">RM-001200</div>
-              </td>
-              <td>Poli Gigi + Farmasi</td>
-              <td class="font-bold text-slate-700">Rp 350.000</td>
-              <td><span class="badge badge-success">Lunas</span></td>
-              <td>
-                <div class="flex justify-center items-center gap-2">
-                  <!-- Cetak Struk -->
-                  <button class="btn btn-sm btn-info text-white p-1.5" title="Cetak Struk">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                  </button>
-                  <button class="btn btn-sm btn-outline-primary p-1.5" title="Edit Tagihan">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-
-            <!-- Row 3 (Lunas) -->
-            <tr class="hover:bg-slate-50 transition">
-              <td class="font-bold text-klinik-primary">INV-0422003</td>
-              <td class="text-sm text-slate-500">04 Mei 2026<br><span class="text-xs">19:45 WIB</span></td>
-              <td>
-                <div class="font-semibold text-slate-800">Budi Santoso</div>
-                <div class="text-xs text-slate-500">RM-000854</div>
-              </td>
-              <td>IGD + Farmasi</td>
-              <td class="font-bold text-slate-700">Rp 1.250.000</td>
-              <td><span class="badge badge-success">Lunas</span></td>
-              <td>
-                <div class="flex justify-center items-center gap-2">
-                  <button class="btn btn-sm btn-info text-white p-1.5" title="Cetak Struk">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-
+            <tr><td colspan="7" class="text-center py-4 text-slate-400">Memuat data...</td></tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Pagination -->
       <div class="flex items-center justify-between mt-6">
-        <div class="text-sm text-slate-500">
-          Menampilkan 1 hingga 3 dari 45 tagihan
-        </div>
-        <div class="flex gap-1">
-          <button class="btn btn-outline-secondary px-3 py-1 bg-slate-100 text-slate-400 cursor-not-allowed" disabled>Prev</button>
-          <button class="btn btn-primary px-3 py-1">1</button>
-          <button class="btn btn-outline-secondary px-3 py-1">2</button>
-          <button class="btn btn-outline-secondary px-3 py-1">3</button>
-          <button class="btn btn-outline-secondary px-3 py-1">Next</button>
-        </div>
+        <div class="text-sm text-slate-500" id="tableInfo">Memuat...</div>
+        <div class="flex gap-1" id="tablePagination"></div>
       </div>
 
     </div>
   </div>
 </section>
+
 <script>
+let daftarPasien = [];
+let selectedPatientId = null;
+let patientSearchTimeout = null;
+let allPayments = [];
+
+function setupPatientSearch() {
+    const input = document.getElementById('patientSearchInput');
+    const dropdown = document.getElementById('patientDropdown');
+    if (!input) return;
+
+    async function loadAllPatients() {
+        try {
+            const res = await fetch('/api/patients?all=1');
+            const json = await res.json();
+            daftarPasien = json.data || [];
+        } catch(e) { daftarPasien = []; }
+    }
+    loadAllPatients();
+
+    input.addEventListener('input', function() {
+        clearTimeout(patientSearchTimeout);
+        const q = this.value.trim().toLowerCase();
+        if (q.length < 2) { dropdown.style.display = 'none'; return; }
+        patientSearchTimeout = setTimeout(() => {
+            const filtered = daftarPasien.filter(p => (p.full_name || '').toLowerCase().includes(q) || (p.nik || '').includes(q));
+            if (filtered.length) {
+                dropdown.innerHTML = filtered.map(p => `<div class="px-3 py-2 cursor-pointer hover:bg-klinik-light border-b border-slate-100 text-sm" data-patient-id="${p.id}">${p.full_name} (${p.nik || '-'})</div>`).join('');
+                dropdown.style.display = 'block';
+            } else { dropdown.style.display = 'none'; }
+        }, 300);
+    });
+
+    dropdown.addEventListener('click', function(e) {
+        const item = e.target.closest('[data-patient-id]');
+        if (!item) return;
+        const id = parseInt(item.dataset.patientId);
+        const pt = daftarPasien.find(p => p.id == id);
+        if (!pt) return;
+        input.value = pt.full_name;
+        dropdown.style.display = 'none';
+        selectedPatientId = id;
+        renderTable();
+    });
+
+    document.addEventListener('click', function(e) {
+        const wrapper = document.getElementById('patientSearchWrapper');
+        if (wrapper && !wrapper.contains(e.target)) dropdown.style.display = 'none';
+    });
+}
+
+function renderTable() {
+    const tbody = document.querySelector('.tw-table tbody');
+    if (!tbody) return;
+    const status = document.getElementById('filterStatus').value;
+    let filtered = allPayments;
+    if (selectedPatientId) {
+        filtered = filtered.filter(p => parseInt(p.patient_id) === selectedPatientId);
+    }
+    if (status) {
+        filtered = filtered.filter(p => p.status === status);
+    }
+    window.paginateTable('.tw-table', filtered, 10, p => {
+        const statusMap = { 'unpaid': 'warning', 'paid': 'success', 'cancelled': 'danger' };
+        const badge = statusMap[p.status] || 'secondary';
+        const statusLabel = p.status === 'unpaid' ? 'Belum Lunas' : p.status === 'paid' ? 'Lunas' : p.status;
+        const invoice = p.invoice_number || p.payment_code || '-';
+        const date = p.payment_date ? new Date(p.payment_date) : new Date();
+        const dateStr = date.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+        const timeStr = date.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+        const total = parseInt(p.total || p.total_amount || 0);
+        return `<tr class="hover:bg-slate-50 transition">
+            <td class="font-bold text-klinik-primary">${invoice}</td>
+            <td class="text-sm text-slate-500">${dateStr}<br><span class="text-xs">${timeStr} WIB</span></td>
+            <td><div class="font-semibold text-slate-800">${p.patient_name || '-'}</div></td>
+            <td>${p.payment_method || '-'}</td>
+            <td class="font-bold text-slate-700">Rp ${total.toLocaleString()}</td>
+            <td><span class="badge badge-${badge}">${statusLabel}</span></td>
+            <td>
+                <div class="flex justify-center items-center gap-2">
+                    ${p.status === 'unpaid' ? `<a href="${'<?= base_url("kasir/billing") ?>'}?id=${p.id}&inv=${invoice}" class="btn btn-sm btn-success p-1.5" title="Proses Pembayaran">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                    </a>` : `<a href="${'<?= base_url("kasir/billing") ?>'}?id=${p.id}&inv=${invoice}&print=1" class="btn btn-sm btn-info text-white p-1.5" title="Cetak Struk">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                    </a>`}
+                    <a href="${'<?= base_url("kasir/billing") ?>'}?id=${p.id}&inv=${invoice}" class="btn btn-sm btn-outline-primary p-1.5" title="Detail / Edit Tagihan">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                    </a>
+                    ${p.status === 'unpaid' ? `<button class="btn btn-sm btn-outline-danger p-1.5" title="Hapus Tagihan" onclick="hapusTagihan('${p.id}')">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>` : ''}
+                </div>
+            </td>
+        </tr>`;
+    });
+    document.getElementById('tableInfo').textContent = `Menampilkan ${filtered.length} tagihan`;
+}
+
 async function loadPaymentTable() {
     const tbody = document.querySelector('.tw-table tbody');
     if (!tbody) return;
     try {
         const res = await fetch('/api/payments');
         const json = await res.json();
-        const list = json.data || [];
-        
-        window.paginateTable('.tw-table', list, 10, p => {
-            const statusMap = { 'unpaid': 'warning', 'paid': 'success', 'cancelled': 'danger' };
-            const badge = statusMap[p.status] || 'secondary';
-            const statusLabel = p.status === 'unpaid' ? 'Belum Lunas' : p.status === 'paid' ? 'Lunas' : p.status;
-            const invoice = p.invoice_number || p.payment_code || '-';
-            const date = p.payment_date ? new Date(p.payment_date) : new Date();
-            const dateStr = date.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
-            const timeStr = date.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
-            const total = parseInt(p.total || p.total_amount || 0);
-            return `<tr class="hover:bg-slate-50 transition">
-                <td class="font-bold text-klinik-primary">${invoice}</td>
-                <td class="text-sm text-slate-500">${dateStr}<br><span class="text-xs">${timeStr} WIB</span></td>
-                <td><div class="font-semibold text-slate-800">${p.patient_name || '-'}</div></td>
-                <td>${p.payment_method || '-'}</td>
-                <td class="font-bold text-slate-700">Rp ${total.toLocaleString()}</td>
-                <td><span class="badge badge-${badge}">${statusLabel}</span></td>
-                <td>
-                    <div class="flex justify-center items-center gap-2">
-                        ${p.status === 'unpaid' ? `<a href="${'<?= base_url("kasir/billing") ?>'}?id=${p.id}&inv=${invoice}" class="btn btn-sm btn-success p-1.5" title="Proses Pembayaran">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                        </a>` : `<a href="${'<?= base_url("kasir/billing") ?>'}?id=${p.id}&inv=${invoice}&print=1" class="btn btn-sm btn-info text-white p-1.5" title="Cetak Struk">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                        </a>`}
-                        <a href="${'<?= base_url("kasir/billing") ?>'}?id=${p.id}&inv=${invoice}" class="btn btn-sm btn-outline-primary p-1.5" title="Detail / Edit Tagihan">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                        </a>
-                        ${p.status === 'unpaid' ? `<button class="btn btn-sm btn-outline-danger p-1.5" title="Hapus Tagihan" onclick="hapusTagihan('${p.id}')">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>` : ''}
-                    </div>
-                </td>
-            </tr>`;
-        });
+        allPayments = json.data || [];
+        renderTable();
     } catch(e) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-500">Gagal memuat data</td></tr>'; }
 }
-document.addEventListener('DOMContentLoaded', function() {
-    loadPaymentTable();
-    setInterval(loadPaymentTable, 10000);
-});
+
 function hapusTagihan(id) {
     window.confirmDialog('Apakah Anda yakin ingin menghapus tagihan ini?', async () => {
         try {
@@ -216,5 +196,12 @@ function hapusTagihan(id) {
         } catch(e) { window.showToast('Network error', 'error'); }
     });
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    setupPatientSearch();
+    loadPaymentTable();
+    document.getElementById('filterStatus').addEventListener('change', renderTable);
+    setInterval(loadPaymentTable, 10000);
+});
 </script>
 <?= $this->endSection() ?>
