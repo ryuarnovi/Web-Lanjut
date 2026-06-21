@@ -103,6 +103,9 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
     $routes->post('prescription-items', '\Modules\Apoteker\Controllers\Apoteker::createPrescriptionItem');
 
     // Patients API (Resepsionis)
+    $routes->get('patients/export', '\Modules\Resepsionis\Controllers\Resepsionis::exportPatients');
+    $routes->get('patients/template', '\Modules\Resepsionis\Controllers\Resepsionis::downloadPatientTemplate');
+    $routes->post('patients/import', '\Modules\Resepsionis\Controllers\Resepsionis::importPatients');
     $routes->get('patients', '\Modules\Resepsionis\Controllers\Resepsionis::listPatients');
     $routes->get('patients/(:num)', '\Modules\Resepsionis\Controllers\Resepsionis::getPatient/$1');
     $routes->post('patients', '\Modules\Resepsionis\Controllers\Resepsionis::createPatient');

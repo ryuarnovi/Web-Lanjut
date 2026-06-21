@@ -1,0 +1,6 @@
+nik,full_name,date_of_birth,gender,address,phone,email,blood_type,allergies,emergency_contact,emergency_phone,status
+3201234567890001,Budi Santoso,1990-05-15,L,"Jl. Merdeka No. 10 RT 03/RW 05 Kel. Sukamaju Kec. Cilandak Jakarta Selatan",081234567890,budi.santoso@email.com,O,Tidak ada,Siti Aminah,089876543210,active
+3201234567890002,Ani Rahayu,1985-11-22,P,"Jl. Sudirman No. 55 RT 01/RW 02 Kel. Menteng Kec. Menteng Jakarta Pusat",082345678901,ani.rahayu@email.com,A,"Penisilin, Sulfa",Dedi Rahayu,081122334455,active
+3201234567890003,Cahyo Wibowo,2000-03-08,L,"Jl. Gatot Subroto No. 22 Bandung",083456789012,,B,,Rina Wibowo,087766554433,active
+3201234567890004,Dewi Lestari,1978-09-30,P,"Jl. Ahmad Yani No. 100 Surabaya",084567890123,dewi.lestari@email.com,AB,Aspirin,Agus Lestari,082233445566,active
+3201234567890005,Eko Prasetyo,1995-01-12,L,"Jl. Diponegoro No. 33 RT 02/RW 01 Semarang",085678901234,eko.prasetyo@email.com,O,,Sri Wahyuni,083344556677,active

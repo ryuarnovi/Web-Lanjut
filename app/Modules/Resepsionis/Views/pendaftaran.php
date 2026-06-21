@@ -12,6 +12,25 @@
   </nav>
 </div>
 
+<!-- Import / Export Toolbar -->
+<div class="mb-6 flex flex-wrap items-center gap-3">
+  <a href="/api/patients/export" class="btn btn-outline-primary flex items-center gap-2" id="btnExportPasien">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+    Export CSV
+  </a>
+  <a href="/api/patients/template" class="btn btn-outline-secondary flex items-center gap-2" id="btnTemplatePasien">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+    Download Template
+  </a>
+  <button class="btn btn-success flex items-center gap-2" id="btnOpenImportModal" onclick="document.getElementById('patientImportModal').innerHTML = getPatientImportModalHTML(); document.getElementById('patientImportModal').querySelector('.modal-overlay').classList.remove('hidden')">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+    Import CSV
+  </button>
+</div>
+
+<!-- Import Modal -->
+<div id="patientImportModal"></div>
+
 <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <!-- Form Pendaftaran -->
   <div class="lg:col-span-2 space-y-6">
@@ -339,6 +358,158 @@ document.addEventListener('DOMContentLoaded', async function() {
             showToast('Terjadi kesalahan jaringan', 'error'); 
         }
     });
+
+    // Patient Import: file preview
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.id === 'patientImportFileInput') {
+            previewPatientCSV(e.target);
+        }
+    });
+
+    // Patient Import: form submit
+    document.addEventListener('submit', function(e) {
+        if (e.target && e.target.id === 'patientImportForm') {
+            e.preventDefault();
+            submitPatientImport();
+        }
+    });
 });
+
+// ============ PATIENT IMPORT MODAL ============
+
+function getPatientImportModalHTML() {
+    return `<div class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center modal-overlay hidden" onclick="if(event.target===this)closePatientImportModal()">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-teal-50">
+                <h5 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                    Import Data Pasien dari CSV
+                </h5>
+                <button class="btn btn-sm btn-outline-secondary rounded-full" onclick="closePatientImportModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                    <strong>Tips:</strong> Unduh <a href="/api/patients/template" class="underline font-bold">template CSV</a> terlebih dahulu untuk memastikan format kolom yang benar.
+                    <br>Kolom wajib: <code class="bg-blue-100 px-1 rounded">nik</code>, <code class="bg-blue-100 px-1 rounded">full_name</code>.
+                    <br>Jika NIK sudah ada, data pasien akan di-<em>update</em>. Jika belum, akan ditambahkan sebagai pasien baru.
+                </div>
+                <form id="patientImportForm" class="space-y-4">
+                    <div>
+                        <label class="form-label">Pilih File CSV</label>
+                        <input type="file" class="form-input" id="patientImportFileInput" accept=".csv,.txt" required>
+                    </div>
+                    <div id="patientImportPreview" class="hidden">
+                        <label class="form-label">Preview Data (5 baris pertama)</label>
+                        <div class="overflow-x-auto border border-slate-200 rounded-lg max-h-52 text-xs"></div>
+                    </div>
+                    <div class="flex items-center gap-3 pt-2">
+                        <button type="submit" class="btn btn-success flex items-center gap-2" id="btnPatientImport">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                            Import Data
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="closePatientImportModal()">Batal</button>
+                    </div>
+                </form>
+                <div id="patientImportResult" class="hidden mt-4"></div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function closePatientImportModal() {
+    const overlay = document.querySelector('#patientImportModal .modal-overlay');
+    if (overlay) overlay.classList.add('hidden');
+    const result = document.getElementById('patientImportResult');
+    if (result) result.classList.add('hidden');
+}
+
+function previewPatientCSV(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const preview = document.getElementById('patientImportPreview');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text = e.target.result;
+        const lines = text.split('\n').filter(l => l.trim());
+        if (lines.length < 2) {
+            preview.classList.add('hidden');
+            return;
+        }
+        // Parse CSV (simple)
+        const parseCSVLine = (line) => {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (ch === '"') { inQuotes = !inQuotes; }
+                else if (ch === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+                else { current += ch; }
+            }
+            result.push(current.trim());
+            return result;
+        };
+        const headers = parseCSVLine(lines[0]);
+        const rows = lines.slice(1, 6).map(l => parseCSVLine(l));
+        let html = '<table class="tw-table m-0 text-xs"><thead class="bg-slate-50"><tr>';
+        headers.forEach(h => { html += '<th class="px-2 py-1 whitespace-nowrap">' + h.replace(/^\xEF\xBB\xBF/, '') + '</th>'; });
+        html += '</tr></thead><tbody>';
+        rows.forEach(r => {
+            html += '<tr>';
+            r.forEach(c => { html += '<td class="px-2 py-1 max-w-[200px] truncate">' + (c || '<span class=\'text-slate-300\'>-</span>') + '</td>'; });
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        const remaining = lines.length - 6;
+        if (remaining > 0) {
+            html += '<div class="text-xs text-slate-400 p-2 text-center">...dan ' + remaining + ' baris lainnya</div>';
+        }
+        preview.querySelector('div').innerHTML = html;
+        preview.classList.remove('hidden');
+    };
+    reader.readAsText(file);
+}
+
+async function submitPatientImport() {
+    const fileInput = document.getElementById('patientImportFileInput');
+    if (!fileInput || !fileInput.files[0]) {
+        showToast('Pilih file CSV terlebih dahulu', 'warning');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    const btn = document.getElementById('btnPatientImport');
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Importing...';
+
+    try {
+        const res = await fetch('/api/patients/import', { method: 'POST', body: formData });
+        const json = await res.json();
+        const resultDiv = document.getElementById('patientImportResult');
+        resultDiv.classList.remove('hidden');
+        if (res.ok) {
+            resultDiv.innerHTML = '<div class="p-3 rounded-lg bg-green-50 text-green-700 border border-green-200 text-sm">' + (json.message || 'Import berhasil') + '</div>';
+            showToast(json.message || 'Import berhasil', 'success');
+            // Refresh patient table
+            if (typeof loadPatientTable === 'function') loadPatientTable();
+        } else {
+            const errMsg = json.error || 'Gagal import';
+            let details = '';
+            if (json.details && json.details.length) {
+                details = '<ul class="mt-2 ml-4 list-disc text-xs">' + json.details.map(d => '<li>' + d + '</li>').join('') + '</ul>';
+            }
+            resultDiv.innerHTML = '<div class="p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm">' + errMsg + details + '</div>';
+            showToast(errMsg, 'error');
+        }
+    } catch(e) {
+        showToast('Terjadi kesalahan jaringan', 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg> Import Data';
+}
 </script>
 <?= $this->endSection() ?>

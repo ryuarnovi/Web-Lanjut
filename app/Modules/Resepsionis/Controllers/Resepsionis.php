@@ -408,6 +408,282 @@ class Resepsionis extends BaseController
         return $this->response->setJSON(['message' => 'Loket deleted']);
     }
 
+    // ============ IMPORT / EXPORT PATIENTS ============
+
+    public function downloadPatientTemplate()
+    {
+        $filename = 'template_import_pasien.csv';
+        $headers = [
+            'nik', 'full_name', 'date_of_birth', 'gender', 'address',
+            'phone', 'email', 'blood_type', 'allergies',
+            'emergency_contact', 'emergency_phone', 'status'
+        ];
+
+        $example1 = [
+            '3201234567890001', 'Budi Santoso', '1990-05-15', 'L', 'Jl. Merdeka No. 10 RT 03/RW 05 Kel. Sukamaju Kec. Cilandak Jakarta Selatan',
+            '081234567890', 'budi.santoso@email.com', 'O', 'Tidak ada',
+            'Siti Aminah', '089876543210', 'active'
+        ];
+        $example2 = [
+            '3201234567890002', 'Ani Rahayu', '1985-11-22', 'P', 'Jl. Sudirman No. 55 RT 01/RW 02 Kel. Menteng Kec. Menteng Jakarta Pusat',
+            '082345678901', 'ani.rahayu@email.com', 'A', 'Penisilin, Sulfa',
+            'Dedi Rahayu', '081122334455', 'active'
+        ];
+        $example3 = [
+            '3201234567890003', 'Cahyo Wibowo', '2000-03-08', 'L', 'Jl. Gatot Subroto No. 22 Bandung',
+            '083456789012', '', 'B', '',
+            'Rina Wibowo', '087766554433', 'active'
+        ];
+
+        $this->downloadCSV($filename, $headers, [$headers, $example1, $example2, $example3]);
+    }
+
+    public function exportPatients()
+    {
+        $query = $this->db->query("SELECT nik, full_name, date_of_birth, gender, address, phone, email, blood_type, allergies, emergency_contact, emergency_phone, status, patient_code, created_at FROM patients ORDER BY full_name ASC");
+        $patients = $query->getResultArray();
+
+        $filename = 'data_pasien_' . date('Y-m-d') . '.csv';
+        $headers = [
+            'nik', 'full_name', 'date_of_birth', 'gender', 'address',
+            'phone', 'email', 'blood_type', 'allergies',
+            'emergency_contact', 'emergency_phone', 'status',
+            'patient_code', 'created_at'
+        ];
+
+        $rows = array_map(function($p) {
+            return [
+                $p['nik'], $p['full_name'], $p['date_of_birth'], $p['gender'], $p['address'],
+                $p['phone'], $p['email'], $p['blood_type'], $p['allergies'],
+                $p['emergency_contact'], $p['emergency_phone'], $p['status'],
+                $p['patient_code'], $p['created_at']
+            ];
+        }, $patients);
+
+        $this->downloadCSV($filename, $headers, $rows);
+    }
+
+    public function importPatients()
+    {
+        $file = $this->request->getFile('file');
+        if (!$file || !$file->isValid()) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'File tidak valid atau tidak diunggah']);
+        }
+
+        $ext = $file->getExtension();
+        if (!in_array(strtolower($ext), ['csv', 'txt'])) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Hanya file CSV yang diizinkan']);
+        }
+
+        $handle = fopen($file->getTempName(), 'r');
+        if (!$handle) {
+            return $this->response->setStatusCode(500)->setJSON(['error' => 'Gagal membaca file']);
+        }
+
+        // Read header row
+        $header = fgetcsv($handle);
+        if (!$header) {
+            fclose($handle);
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'File CSV kosong atau tidak valid']);
+        }
+
+        // Normalize headers: lowercase, trim, replace spaces/special chars
+        $header = array_map(function($h) {
+            $h = strtolower(trim($h));
+            $h = str_replace([' ', '-'], '_', $h);
+            // Remove BOM if present
+            $h = preg_replace('/[\x{FEFF}]/u', '', $h);
+            return $h;
+        }, $header);
+
+        $expected = ['full_name', 'nik'];
+        $missing = array_diff($expected, $header);
+        if (!empty($missing)) {
+            fclose($handle);
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Kolom wajib tidak ditemukan: ' . implode(', ', $missing) . '. Unduh template untuk format yang benar.']);
+        }
+
+        // Map CSV columns to DB columns
+        $columnMap = [
+            'nik'               => 'nik',
+            'full_name'         => 'full_name',
+            'nama_lengkap'      => 'full_name',
+            'nama'              => 'full_name',
+            'date_of_birth'     => 'date_of_birth',
+            'tanggal_lahir'     => 'date_of_birth',
+            'tgl_lahir'         => 'date_of_birth',
+            'gender'            => 'gender',
+            'jenis_kelamin'     => 'gender',
+            'jk'                => 'gender',
+            'address'           => 'address',
+            'alamat'            => 'address',
+            'phone'             => 'phone',
+            'telepon'           => 'phone',
+            'no_telepon'        => 'phone',
+            'no_hp'             => 'phone',
+            'email'             => 'email',
+            'blood_type'        => 'blood_type',
+            'golongan_darah'    => 'blood_type',
+            'gol_darah'         => 'blood_type',
+            'allergies'         => 'allergies',
+            'alergi'            => 'allergies',
+            'emergency_contact' => 'emergency_contact',
+            'kontak_darurat'    => 'emergency_contact',
+            'emergency_phone'   => 'emergency_phone',
+            'telepon_darurat'   => 'emergency_phone',
+            'no_darurat'        => 'emergency_phone',
+            'status'            => 'status',
+        ];
+
+        // Build index map
+        $indexMap = [];
+        foreach ($header as $i => $col) {
+            if (isset($columnMap[$col])) {
+                $indexMap[$i] = $columnMap[$col];
+            }
+        }
+
+        $this->db->transBegin();
+        $imported = 0;
+        $updated = 0;
+        $skipped = 0;
+        $errors = [];
+        $rowNum = 1;
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $rowNum++;
+            $data = [];
+            foreach ($indexMap as $i => $dbCol) {
+                $data[$dbCol] = isset($row[$i]) ? trim($row[$i]) : null;
+            }
+
+            $nik = $data['nik'] ?? '';
+            $fullName = $data['full_name'] ?? '';
+
+            if (empty($nik) || empty($fullName)) {
+                $errors[] = "Baris $rowNum: NIK dan Nama Lengkap wajib diisi";
+                continue;
+            }
+
+            // Validate NIK format (numeric, 16 digits)
+            if (!preg_match('/^\d{16}$/', $nik)) {
+                $errors[] = "Baris $rowNum: NIK harus 16 digit angka (NIK: $nik)";
+                continue;
+            }
+
+            // Normalize gender
+            $gender = strtoupper($data['gender'] ?? '');
+            if (in_array($gender, ['LAKI-LAKI', 'LAKI', 'MALE', 'M'])) {
+                $gender = 'L';
+            } elseif (in_array($gender, ['PEREMPUAN', 'WANITA', 'FEMALE', 'F'])) {
+                $gender = 'P';
+            }
+            if (!in_array($gender, ['L', 'P'])) {
+                $gender = 'L'; // Default
+            }
+
+            // Normalize blood type
+            $bloodType = strtoupper($data['blood_type'] ?? '');
+            $validBloodTypes = ['A', 'B', 'AB', 'O', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+            if (!in_array($bloodType, $validBloodTypes)) {
+                $bloodType = null;
+            }
+
+            $status = strtolower($data['status'] ?? 'active');
+            if (!in_array($status, ['active', 'inactive'])) {
+                $status = 'active';
+            }
+
+            // Check if patient exists by NIK
+            $existing = $this->db->query("SELECT id FROM patients WHERE nik = ?", [$nik])->getRowArray();
+
+            if ($existing) {
+                // Update existing patient
+                $this->db->query("UPDATE patients SET full_name = ?, date_of_birth = ?, gender = ?, address = ?, phone = ?, email = ?, blood_type = ?, allergies = ?, emergency_contact = ?, emergency_phone = ?, status = ?, updated_at = NOW() WHERE id = ?", [
+                    $fullName,
+                    !empty($data['date_of_birth']) ? $data['date_of_birth'] : null,
+                    $gender,
+                    $data['address'] ?? null,
+                    $data['phone'] ?? null,
+                    $data['email'] ?? null,
+                    $bloodType,
+                    $data['allergies'] ?? null,
+                    $data['emergency_contact'] ?? null,
+                    $data['emergency_phone'] ?? null,
+                    $status,
+                    $existing['id'],
+                ]);
+                $updated++;
+            } else {
+                // Generate patient code: RM-YYMM-XXXX
+                $todayCount = $this->db->query("SELECT COUNT(*) as c FROM patients WHERE YEAR(created_at) = YEAR(NOW()) AND MONTH(created_at) = MONTH(NOW())")->getRow()->c;
+                $patientCode = 'RM-' . date('ym') . '-' . sprintf('%04d', $todayCount + $imported + 1);
+                // Ensure uniqueness
+                while ($this->db->query("SELECT id FROM patients WHERE patient_code = ?", [$patientCode])->getRow()) {
+                    $todayCount++;
+                    $patientCode = 'RM-' . date('ym') . '-' . sprintf('%04d', $todayCount + $imported + 1);
+                }
+
+                $this->db->query("INSERT INTO patients (patient_code, nik, full_name, date_of_birth, gender, address, phone, email, blood_type, allergies, emergency_contact, emergency_phone, is_walkin, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, NOW(), NOW())", [
+                    $patientCode,
+                    $nik,
+                    $fullName,
+                    !empty($data['date_of_birth']) ? $data['date_of_birth'] : null,
+                    $gender,
+                    $data['address'] ?? null,
+                    $data['phone'] ?? null,
+                    $data['email'] ?? null,
+                    $bloodType,
+                    $data['allergies'] ?? null,
+                    $data['emergency_contact'] ?? null,
+                    $data['emergency_phone'] ?? null,
+                    $status,
+                ]);
+                $imported++;
+            }
+        }
+
+        fclose($handle);
+
+        if (!empty($errors)) {
+            $this->db->transRollback();
+            return $this->response->setStatusCode(400)->setJSON([
+                'error' => 'Import gagal. Perbaiki error berikut:',
+                'details' => $errors
+            ]);
+        }
+
+        $this->db->transCommit();
+
+        $this->logActivity('IMPORT', 'patients', 0, "Import CSV pasien: $imported baru, $updated diperbarui");
+        return $this->response->setJSON([
+            'message' => "Import berhasil! $imported pasien baru ditambahkan, $updated pasien diperbarui.",
+            'imported' => $imported,
+            'updated' => $updated
+        ]);
+    }
+
+    private function downloadCSV($filename, $headers, $rows)
+    {
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+
+        // Write BOM for Excel compatibility
+        fwrite($output, "\xEF\xBB\xBF");
+
+        // Write rows
+        foreach ($rows as $row) {
+            fputcsv($output, $row);
+        }
+
+        fclose($output);
+        exit;
+    }
+
     private function logActivity($action, $entity, $entityID, $description)
     {
         $userID = session()->get('user_id') ?? 0;
