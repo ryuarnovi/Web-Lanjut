@@ -228,6 +228,34 @@ CREATE TABLE IF NOT EXISTS icd9cm (
     is_active TINYINT(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS appointments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_name VARCHAR(255) NOT NULL,
+    patient_phone VARCHAR(20) NULL,
+    patient_email VARCHAR(100) NULL,
+    poli VARCHAR(100) NULL,
+    doctor_id INT NULL,
+    appointment_date DATE NOT NULL,
+    appointment_time TIME NULL,
+    keluhan TEXT NULL,
+    status VARCHAR(20) DEFAULT 'pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (doctor_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS patient_messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_name VARCHAR(255) NOT NULL,
+    patient_phone VARCHAR(20) NULL,
+    patient_email VARCHAR(100) NULL,
+    subject VARCHAR(255) NULL,
+    message TEXT NOT NULL,
+    status VARCHAR(20) DEFAULT 'unread',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS settings (
     id INT AUTO_INCREMENT PRIMARY KEY,
     `key` VARCHAR(100) UNIQUE NOT NULL,

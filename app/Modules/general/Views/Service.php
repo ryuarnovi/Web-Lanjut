@@ -107,12 +107,42 @@
 
     <!-- Sidebar footer CTA -->
     <div class="px-4 py-5 border-t border-outline/30">
-        <a href="<?= base_url('login') ?>"
-           class="flex items-center justify-center gap-2 bg-primary-con text-white text-[14px] font-semibold px-5 py-3 rounded-xl hover:brightness-110 transition-all w-full">
-            <span class="material-symbols-outlined text-[17px]">lock</span>
-            Akses Internal
-        </a>
+        <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" class="flex items-center justify-center gap-2 bg-primary-con text-white text-[14px] font-semibold px-5 py-3 rounded-xl hover:brightness-110 transition-all w-full">
+                <span class="material-symbols-outlined text-[17px]">lock</span>
+                Akses Internal
+                <span class="material-symbols-outlined text-[16px]" :class="open ? 'rotate-180' : ''" style="transition:transform .2s">expand_more</span>
+            </button>
+            <div x-show="open" @click.outside="open = false" class="mt-2 bg-white rounded-xl shadow-xl border border-outline/30 overflow-hidden" style="display:none">
+                <a href="<?= base_url('login') ?>" class="flex items-center gap-3 px-4 py-3 text-sm text-on-bg hover:bg-surface-low transition border-b border-outline/10">
+                    <span class="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-primary text-[16px]">admin_panel_settings</span></span>
+                    Admin
+                </a>
+                <a href="<?= base_url('login') ?>" class="flex items-center gap-3 px-4 py-3 text-sm text-on-bg hover:bg-surface-low transition border-b border-outline/10">
+                    <span class="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-emerald-600 text-[16px]">front_hand</span></span>
+                    Resepsionis
+                </a>
+                <a href="<?= base_url('login') ?>" class="flex items-center gap-3 px-4 py-3 text-sm text-on-bg hover:bg-surface-low transition border-b border-outline/10">
+                    <span class="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-blue-600 text-[16px]">stethoscope</span></span>
+                    Dokter
+                </a>
+                <a href="<?= base_url('login') ?>" class="flex items-center gap-3 px-4 py-3 text-sm text-on-bg hover:bg-surface-low transition border-b border-outline/10">
+                    <span class="w-7 h-7 rounded-full bg-purple-50 flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-purple-600 text-[16px]">vaccines</span></span>
+                    Perawat
+                </a>
+                <a href="<?= base_url('login') ?>" class="flex items-center gap-3 px-4 py-3 text-sm text-on-bg hover:bg-surface-low transition border-b border-outline/10">
+                    <span class="w-7 h-7 rounded-full bg-amber-50 flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-amber-600 text-[16px]">medication</span></span>
+                    Apoteker
+                </a>
+                <a href="<?= base_url('login') ?>" class="flex items-center gap-3 px-4 py-3 text-sm text-on-bg hover:bg-surface-low transition">
+                    <span class="w-7 h-7 rounded-full bg-rose-50 flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-rose-600 text-[16px]">receipt_long</span></span>
+                    Kasir
+                </a>
+            </div>
+        </div>
     </div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 </div>
 
@@ -137,11 +167,39 @@
         </ul>
 
         <!-- CTA Desktop -->
-        <a href="<?= base_url('login') ?>"
-           class="hidden md:flex items-center gap-2 bg-primary-con text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-primary-con/20 hover:brightness-110 transition-all">
-            <span class="material-symbols-outlined text-[18px]">lock</span>
-            Akses Internal
-        </a>
+        <div class="relative hidden md:block" x-data="{ open: false }">
+            <button @click="open = !open" class="flex items-center gap-2 bg-primary-con text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-primary-con/20 hover:brightness-110 transition-all">
+                <span class="material-symbols-outlined text-[18px]">lock</span>
+                Akses Internal
+                <span class="material-symbols-outlined text-[16px]" :class="open ? 'rotate-180' : ''" style="transition:transform .2s">expand_more</span>
+            </button>
+            <div x-show="open" @click.outside="open = false" class="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-outline/30 overflow-hidden z-50" style="display:none">
+                <a href="<?= base_url('login') ?>" class="flex items-center gap-3 px-4 py-3 text-sm text-on-bg hover:bg-surface-low transition border-b border-outline/10">
+                    <span class="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-primary text-[16px]">admin_panel_settings</span></span>
+                    Admin
+                </a>
+                <a href="<?= base_url('login') ?>" class="flex items-center gap-3 px-4 py-3 text-sm text-on-bg hover:bg-surface-low transition border-b border-outline/10">
+                    <span class="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-emerald-600 text-[16px]">front_hand</span></span>
+                    Resepsionis
+                </a>
+                <a href="<?= base_url('login') ?>" class="flex items-center gap-3 px-4 py-3 text-sm text-on-bg hover:bg-surface-low transition border-b border-outline/10">
+                    <span class="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-blue-600 text-[16px]">stethoscope</span></span>
+                    Dokter
+                </a>
+                <a href="<?= base_url('login') ?>" class="flex items-center gap-3 px-4 py-3 text-sm text-on-bg hover:bg-surface-low transition border-b border-outline/10">
+                    <span class="w-7 h-7 rounded-full bg-purple-50 flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-purple-600 text-[16px]">vaccines</span></span>
+                    Perawat
+                </a>
+                <a href="<?= base_url('login') ?>" class="flex items-center gap-3 px-4 py-3 text-sm text-on-bg hover:bg-surface-low transition border-b border-outline/10">
+                    <span class="w-7 h-7 rounded-full bg-amber-50 flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-amber-600 text-[16px]">medication</span></span>
+                    Apoteker
+                </a>
+                <a href="<?= base_url('login') ?>" class="flex items-center gap-3 px-4 py-3 text-sm text-on-bg hover:bg-surface-low transition">
+                    <span class="w-7 h-7 rounded-full bg-rose-50 flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-rose-600 text-[16px]">receipt_long</span></span>
+                    Kasir
+                </a>
+            </div>
+        </div>
 
         <!-- Mobile hamburger -->
         <button id="sidebar-open" class="md:hidden p-2 rounded-lg hover:bg-surface-high">
@@ -386,7 +444,7 @@
                     <a href="<?= base_url('contact') ?>"
                        class="inline-flex items-center justify-center gap-2 border border-white/30 text-white font-semibold px-8 py-4 rounded-2xl hover:bg-white/10 transition-all">
                         <span class="material-symbols-outlined">call</span>
-                        Hubungi Kami
+                        Kontak
                     </a>
                 </div>
             </div>

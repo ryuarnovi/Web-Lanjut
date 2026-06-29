@@ -21,7 +21,12 @@ class general extends BaseController
     }
 
     public function Contact(){
-        return view('Modules\General\Views\Contact', ['title' => 'Kontak klinik- KlinikOS 2.0']);
+        $db = \Config\Database::connect();
+        $doctors = $db->query("SELECT id, full_name, specialization FROM users WHERE role = 'dokter' AND is_active = 1 ORDER BY full_name ASC")->getResultArray();
+        return view('Modules\General\Views\Contact', [
+            'title' => 'Kontak klinik- KlinikOS 2.0',
+            'doctors' => $doctors,
+        ]);
     }
 
 }

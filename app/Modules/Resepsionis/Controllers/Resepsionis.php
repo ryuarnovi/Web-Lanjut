@@ -368,6 +368,82 @@ class Resepsionis extends BaseController
 
     // ============ ACTIVITY LOG HELPER ============
 
+    // ============ APPOINTMENTS (JANJI TEMU) VIEWS & API ============
+
+    public function janjiTemu()
+    {
+        return view('Modules\Resepsionis\Views\janji_temu', ['title' => 'Daftar Janji Temu - KlinikOS 2.0']);
+    }
+
+    public function pesan()
+    {
+        return view('Modules\Resepsionis\Views\pesan', ['title' => 'Pesan Masuk - KlinikOS 2.0']);
+    }
+
+    public function listAppointments()
+    {
+        $sql = "SELECT a.id, a.patient_name, a.patient_phone, a.patient_email, a.poli, a.doctor_id, a.appointment_date, a.appointment_time, a.keluhan, a.status, a.created_at, u.full_name as doctor_name FROM appointments a LEFT JOIN users u ON a.doctor_id = u.id ORDER BY a.created_at DESC";
+        $query = $this->db->query($sql);
+        return $this->response->setJSON(['data' => $query->getResultArray()]);
+    }
+
+    public function updateAppointment($id)
+    {
+        $input = $this->request->getJSON(true);
+        $status = $input['status'] ?? null;
+
+        if (!$status || !in_array($status, ['pending', 'confirmed', 'cancelled', 'completed'])) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Status tidak valid']);
+        }
+
+        $this->db->query("UPDATE appointments SET status = ?, updated_at = NOW() WHERE id = ?", [$status, (int) $id]);
+        $this->logActivity('UPDATE', 'appointments', (int) $id, 'Memperbarui status janji temu ke ' . $status);
+        return $this->response->setJSON(['message' => 'Appointment updated']);
+    }
+
+    public function getAppointment($id)
+    {
+        $sql = "SELECT a.*, u.full_name as doctor_name FROM appointments a LEFT JOIN users u ON a.doctor_id = u.id WHERE a.id = ?";
+        $data = $this->db->query($sql, [(int) $id])->getRowArray();
+        if (!$data) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'Appointment not found']);
+        }
+        return $this->response->setJSON(['data' => $data]);
+    }
+
+    // ============ PATIENT MESSAGES API ============
+
+    public function listMessages()
+    {
+        $sql = "SELECT * FROM patient_messages ORDER BY created_at DESC";
+        $query = $this->db->query($sql);
+        return $this->response->setJSON(['data' => $query->getResultArray()]);
+    }
+
+    public function getMessage($id)
+    {
+        $data = $this->db->query("SELECT * FROM patient_messages WHERE id = ?", [(int) $id])->getRowArray();
+        if (!$data) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'Message not found']);
+        }
+
+        $this->db->query("UPDATE patient_messages SET status = 'read', updated_at = NOW() WHERE id = ?", [(int) $id]);
+
+        return $this->response->setJSON(['data' => $data]);
+    }
+
+    public function markMessageRead($id)
+    {
+        $this->db->query("UPDATE patient_messages SET status = 'read', updated_at = NOW() WHERE id = ?", [(int) $id]);
+        return $this->response->setJSON(['message' => 'Message marked as read']);
+    }
+
+    public function deleteMessage($id)
+    {
+        $this->db->query("DELETE FROM patient_messages WHERE id = ?", [(int) $id]);
+        return $this->response->setJSON(['message' => 'Message deleted']);
+    }
+
     // ============ LOKET API ============
 
     public function listLokets()

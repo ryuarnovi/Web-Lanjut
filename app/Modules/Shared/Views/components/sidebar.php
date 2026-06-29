@@ -23,6 +23,8 @@
         <div id="nav-mod-resepsionis" class="nav-sub <?= str_contains(uri_string(), 'resepsionis') ? 'open' : '' ?>">
           <a href="<?= base_url('resepsionis/pendaftaran') ?>" class="<?= uri_string() == 'resepsionis/pendaftaran' ? 'active' : '' ?>">Pendaftaran Pasien</a>
           <a href="<?= base_url('resepsionis/antrean') ?>" class="<?= uri_string() == 'resepsionis/antrean' ? 'active' : '' ?>">Plotting Antrean</a>
+          <a href="<?= base_url('resepsionis/janji-temu') ?>" class="<?= uri_string() == 'resepsionis/janji-temu' ? 'active' : '' ?>">Daftar Janji Temu</a>
+          <a href="<?= base_url('resepsionis/pesan') ?>" class="<?= uri_string() == 'resepsionis/pesan' ? 'active' : '' ?>">Pesan Masuk</a>
         </div>
       </li>
       <?php endif; ?>

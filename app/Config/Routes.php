@@ -34,6 +34,8 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->group('resepsionis', ['filter' => 'auth:admin,resepsionis'], function ($routes) {
         $routes->get('pendaftaran', '\Modules\Resepsionis\Controllers\Resepsionis::pendaftaran');
         $routes->get('antrean', '\Modules\Resepsionis\Controllers\Resepsionis::antrean');
+        $routes->get('janji-temu', '\Modules\Resepsionis\Controllers\Resepsionis::janjiTemu');
+        $routes->get('pesan', '\Modules\Resepsionis\Controllers\Resepsionis::pesan');
     });
 
     // Dokter
@@ -162,6 +164,17 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
     $routes->post('midtrans/snap', '\Modules\Kasir\Controllers\Kasir::createMidtransSnap');
     $routes->post('midtrans/webhook', '\Modules\Kasir\Controllers\Kasir::midtransWebhook');
 
+    // Appointments API (Resepsionis)
+    $routes->get('appointments', '\Modules\Resepsionis\Controllers\Resepsionis::listAppointments');
+    $routes->get('appointments/(:num)', '\Modules\Resepsionis\Controllers\Resepsionis::getAppointment/$1');
+    $routes->put('appointments/(:num)', '\Modules\Resepsionis\Controllers\Resepsionis::updateAppointment/$1');
+
+    // Patient Messages API (Resepsionis)
+    $routes->get('messages', '\Modules\Resepsionis\Controllers\Resepsionis::listMessages');
+    $routes->get('messages/(:num)', '\Modules\Resepsionis\Controllers\Resepsionis::getMessage/$1');
+    $routes->put('messages/(:num)/read', '\Modules\Resepsionis\Controllers\Resepsionis::markMessageRead/$1');
+    $routes->delete('messages/(:num)', '\Modules\Resepsionis\Controllers\Resepsionis::deleteMessage/$1');
+
     // Activity Logs API (Resepsionis)
     $routes->get('activity-logs', '\Modules\Resepsionis\Controllers\Resepsionis::listActivityLogs');
     $routes->get('activity-logs/search', '\Modules\Resepsionis\Controllers\Resepsionis::searchActivityLogs');
@@ -209,3 +222,7 @@ $routes->get('general', '\Modules\General\Controllers\General::General');
 $routes->get('service', '\Modules\General\Controllers\General::Service');
 $routes->get('about', '\Modules\General\Controllers\General::About');
 $routes->get('contact', '\Modules\General\Controllers\General::Contact');
+
+// --- API PUBLIK UNTUK SUBMIT DARI HALAMAN CONTACT ---
+$routes->post('pasien/janji-temu/submit', '\Modules\Pasien\Controllers\Pasien::submitJanjiTemu');
+$routes->post('pasien/kirim-pesan/submit', '\Modules\Pasien\Controllers\Pasien::submitPesan');
